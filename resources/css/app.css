@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -6,6 +8,115 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-secondary-fixed: #e2e8f0;
+    --color-on-primary-container: #1e3a8a;
+    --color-on-error: #ffffff;
+    --color-surface-container-low: #f8fafc;
+    --color-primary: #2563eb;
+    --color-primary-fixed: #1e293b;
+    --color-primary-fixed-dim: #3b82f6;
+    --color-on-error-container: #7f1d1d;
+    --color-on-surface: #0f172a;
+    --color-primary-container: #dbeafe;
+    --color-inverse-surface: #1e293b;
+    --color-error-container: #fee2e2;
+    --color-error: #ef4444;
+    --color-surface-container-high: #e2e8f0;
+    --color-secondary-container: #1e293b;
+    --color-surface-variant: #f1f5f9;
+    --color-on-surface-variant: #64748b;
+    --color-on-secondary: #ffffff;
+    --color-on-secondary-fixed-variant: #0f172a;
+    --color-tertiary-container: #dcfce7;
+    --color-secondary-fixed-dim: #cbd5e1;
+    --color-on-primary-fixed: #0f172a;
+    --color-tertiary: #22c55e;
+    --color-inverse-primary: #3b82f6;
+    --color-tertiary-fixed-dim: #10b981;
+    --color-surface-dim: #f1f5f9;
+    --color-on-tertiary-container: #14532d;
+    --color-tertiary-fixed: #1565c0;
+    --on-tertiary-fixed-variant: #095300;
+    --on-secondary-container: #ffffff;
+    --on-primary-fixed-variant: #1e3a8a;
+    --color-outline-variant: #cbd5e1;
+    --color-outline: #94a3b8;
+    --color-on-tertiary: #ffffff;
+    --color-on-secondary-fixed: #0f172a;
+    --color-background: #f8fafc;
+    --color-surface-container-highest: #cbd5e1;
+    --color-surface-bright: #ffffff;
+    --color-inverse-on-surface: #f8fafc;
+    --color-on-tertiary-fixed: #14532d;
+    --color-on-primary: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container: #ffffff;
+    --color-secondary: #0f172a;
+    --color-surface-tint: #2563eb;
+    --color-on-background: #0f172a;
+
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #1e293b;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+}
+
+.glass-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.glow-cyan {
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -2px rgba(59, 130, 246, 0.1);
+}
+
+.glow-purple {
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+}
+
+.btn-gradient {
+    background: #0f172a;
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.btn-gradient:hover {
+    background: #1e293b;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    transform: translateY(-1px);
+}
+
+.animated-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.15) 1px, transparent 0);
+    background-size: 32px 32px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mesh-gradient {
+    background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.02) 0%, transparent 50%);
+}
+
+.font-display {
+    font-family: var(--font-display);
+}
+
+.font-mono {
+    font-family: var(--font-mono);
 }

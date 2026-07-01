@@ -5,83 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Digital Builder | We Build the Future of the Web')</title>
 
-    <!-- Tailwind CSS (Vite / Mix Integration) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Google Fonts & Material Symbols -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
-
-    <!-- Custom High Density Theme Helper Styles -->
-    <style>
-        body {
-            background-color: #f8fafc;
-            color: #1e293b;
-            overflow-x: hidden;
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* High Density Slate Card */
-        .glass-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .glow-cyan {
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1), 0 2px 4px -2px rgba(59, 130, 246, 0.1);
-        }
-
-        .glow-purple {
-            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-        }
-
-        /* Modern Slate Button */
-        .btn-gradient {
-            background: #0f172a;
-            color: #ffffff;
-            transition: all 0.2s ease;
-        }
-
-        .btn-gradient:hover {
-            background: #1e293b;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-            transform: translateY(-1px);
-        }
-
-        .animated-grid {
-            background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.15) 1px, transparent 0);
-            background-size: 32px 32px;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .mesh-gradient {
-            background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(15, 23, 42, 0.02) 0%, transparent 50%);
-        }
-    </style>
     @stack('styles')
 </head>
-<body class="selection:bg-blue-600 selection:text-white">
+<body class="min-h-screen bg-background text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
 
-    <!-- Top Navigation Bar Component -->
     @include('components.nav')
 
-    <!-- Content slot yields here -->
     <main class="relative min-h-screen">
         @yield('content')
     </main>
 
-    <!-- Footer Component -->
     @include('components.footer')
+
+    @include('components.exporter-modal')
+
+    <div class="fixed bottom-6 right-6 z-30">
+        <button
+            type="button"
+            data-exporter-open
+            class="flex items-center gap-2.5 px-4 py-3 rounded-full bg-slate-900/95 border border-slate-700 text-white hover:bg-slate-800 transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] shadow-lg shadow-black/20 backdrop-blur-md"
+        >
+            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4 17 6-6-6-6M12 19h8" />
+            </svg>
+            <span class="text-xs font-bold font-mono tracking-wider">Laravel Blade Code</span>
+            <div class="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[9px] font-mono text-slate-300 font-bold">
+                Ctrl + K
+            </div>
+        </button>
+    </div>
 
     @stack('scripts')
 </body>
