@@ -2,33 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Http;
 
 class SquadsController extends Controller
 {
-    public function index()
+    public function index(): View
     {
-        
-        $curl = curl_init();
+        $response = Http::timeout(10)
+            ->connectTimeout(5)
+            ->withHeaders([
+                'x-apisports-key' => config('services.api_sports.key'),
+            ])
+            ->get('https://v3.football.api-sports.io/players/squads', [
+                'team' => config('services.api_sports.team_id'),
+            ]);
 
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => 'https://v3.football.api-sports.io/players/squads?team=34',
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        CURLOPT_HTTPHEADER => array(
-            'x-apisports-key: a3dc7fe78be5ee17aeaeaddc0808001f'
-        ),
-        ));
-
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-        echo $response;
+        return view('squads', [
+            'data' => $response->successful() ? $response->json() : null,
+            'error' => $response->successful() ? null : $response->body(),
+            'status' => $response->status(),
+        ]);
     }
-
 }

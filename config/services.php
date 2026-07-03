@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'api_sports' => [
+        'key' => env('API_SPORTS_KEY'),
+        'team_id' => env('API_SPORTS_TEAM_ID', 858),
+    ],
+
+    'contact' => [
+        'recipient' => env('CONTACT_RECIPIENT', 'hello@example.com'),
+    ],
+
 ];

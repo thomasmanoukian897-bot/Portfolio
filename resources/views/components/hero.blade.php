@@ -29,19 +29,4 @@
             </button>
         </div>
     </div>
-
-    <div class="hidden lg:block absolute bottom-12 right-16 glass-card p-6 rounded-xl w-80 shadow-md">
-        <div class="flex gap-1.5 mb-4 border-b border-slate-100 pb-3">
-            <div class="w-3 h-3 rounded-full bg-red-400"></div>
-            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-            <div class="w-3 h-3 rounded-full bg-green-400"></div>
-            <span class="text-[10px] text-slate-400 font-mono ml-2">builder.ts</span>
-        </div>
-        <pre class="text-xs text-slate-600 leading-relaxed font-mono"><span class="text-blue-600 font-semibold">const</span> <span class="text-slate-800 font-medium">builder</span> = <span class="text-blue-600 font-semibold">new</span> DigitalBuilder();
-builder.<span class="text-emerald-600 font-medium">ship</span>({
-  velocity: <span class="text-amber-600">"maximum"</span>,
-  quality: <span class="text-amber-600">"enterprise"</span>,
-  scale: <span class="text-amber-600">"infinite"</span>
-});</pre>
-    </div>
 </section>

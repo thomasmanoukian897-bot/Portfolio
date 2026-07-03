@@ -1,4 +1,6 @@
 import './bootstrap';
+import './theme';
+import './portfolio';
 
 const templates = JSON.parse(document.getElementById('exporter-templates-data')?.textContent ?? '[]');
 
