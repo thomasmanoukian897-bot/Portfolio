@@ -180,6 +180,206 @@ async function copyText(text) {
     return copied;
 }
 
+function setVoteIconState(icon, type, isActive) {
+    const isUp = type === 'up';
+
+    icon.classList.remove('fa-regular', 'fa-solid', 'fa-thumbs-up', 'fa-thumbs-down');
+    icon.classList.add(isActive ? 'fa-solid' : 'fa-regular');
+    icon.classList.add(isUp ? 'fa-thumbs-up' : 'fa-thumbs-down');
+    icon.style.color = isActive
+        ? (isUp ? 'rgb(255, 212, 59)' : 'rgb(255, 0, 0)')
+        : '';
+}
+
+function setReplySubmitState(textarea) {
+    const form = textarea.closest('[data-comment-reply-form]');
+    const submit = form?.querySelector('[data-comment-reply-submit]');
+
+    if (submit) {
+        submit.disabled = textarea.value.trim() === '';
+    }
+}
+
+function closeAllReplyForms() {
+    document.querySelectorAll('[data-comment-reply-slot]').forEach((slot) => {
+        slot.innerHTML = '';
+        slot.classList.add('hidden');
+    });
+}
+
+function openReplyForm(button, initialBody = '') {
+    const commentId = button.getAttribute('data-comment-reply');
+    const authorName = button.getAttribute('data-comment-reply-author');
+    const action = button.getAttribute('data-comment-reply-action');
+    const token = button.getAttribute('data-comment-reply-csrf');
+    const slot = document.querySelector(`[data-comment-reply-slot="${commentId}"]`);
+
+    if (! commentId || ! authorName || ! action || ! token || ! slot) {
+        return;
+    }
+
+    closeAllReplyForms();
+
+    slot.classList.remove('hidden');
+    slot.innerHTML = `
+        <form method="POST" action="${action}" data-comment-reply-form="${commentId}">
+            <input type="hidden" name="_token" value="${token}">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <label class="sr-only" for="reply-body-${commentId}">Reply to ${authorName}</label>
+                <textarea
+                    id="reply-body-${commentId}"
+                    name="body"
+                    rows="3"
+                    required
+                    placeholder="Replying to ${authorName}"
+                    data-comment-reply-input
+                    class="w-full resize-none border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0"
+                ></textarea>
+                <div class="mt-3 flex items-center justify-end gap-3">
+                    <button
+                        type="button"
+                        data-comment-reply-cancel="${commentId}"
+                        class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        data-comment-reply-submit
+                        class="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors disabled:cursor-not-allowed disabled:bg-slate-300"
+                        disabled
+                    >
+                        Respond
+                    </button>
+                </div>
+            </div>
+        </form>
+    `;
+
+    const textarea = slot.querySelector('[data-comment-reply-input]');
+
+    if (textarea) {
+        textarea.value = initialBody;
+        setReplySubmitState(textarea);
+        textarea.addEventListener('input', () => {
+            setReplySubmitState(textarea);
+        });
+        textarea.focus();
+    }
+
+    slot.querySelector('[data-comment-reply-cancel]')?.addEventListener('click', () => {
+        closeAllReplyForms();
+    });
+
+    slot.querySelector('[data-comment-reply-form]')?.addEventListener('submit', (event) => {
+        const submit = event.target.querySelector('[data-comment-reply-submit]');
+
+        if (submit) {
+            submit.disabled = true;
+        }
+    });
+}
+
+document.querySelectorAll('[data-comment-reply]').forEach((button) => {
+    button.addEventListener('click', () => {
+        openReplyForm(button);
+    });
+});
+
+const commentsSection = document.getElementById('comments');
+
+if (commentsSection?.dataset.replyTo) {
+    const replyButton = document.querySelector(`[data-comment-reply="${commentsSection.dataset.replyTo}"]`);
+
+    if (replyButton) {
+        openReplyForm(replyButton, commentsSection.dataset.replyBody ?? '');
+    }
+}
+
+const composerForm = document.getElementById('comment-composer-form');
+
+if (composerForm && ! composerForm.dataset.bound) {
+    composerForm.dataset.bound = 'true';
+
+    composerForm.addEventListener('submit', (event) => {
+        const submit = composerForm.querySelector('#comment-composer-submit');
+
+        if (submit?.disabled) {
+            event.preventDefault();
+
+            return;
+        }
+
+        if (submit) {
+            submit.disabled = true;
+        }
+
+        closeAllReplyForms();
+    });
+}
+
+document.querySelectorAll('[data-comment-vote]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const url = button.getAttribute('data-comment-vote');
+        const token = button.getAttribute('data-csrf');
+        const voteType = button.getAttribute('data-vote-type');
+        const group = button.closest('[data-comment-vote-group]');
+
+        if (! url || ! token || ! voteType || ! group) {
+            return;
+        }
+
+        const buttons = group.querySelectorAll('[data-comment-vote]');
+        buttons.forEach((voteButton) => {
+            voteButton.disabled = true;
+        });
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ type: voteType }),
+            });
+
+            if (! response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const upCount = group.querySelector('[data-vote-count="up"]');
+            const downCount = group.querySelector('[data-vote-count="down"]');
+
+            if (upCount) {
+                upCount.textContent = String(data.up_count);
+            }
+
+            if (downCount) {
+                downCount.textContent = String(data.down_count);
+            }
+
+            buttons.forEach((voteButton) => {
+                const type = voteButton.getAttribute('data-vote-type');
+                const icon = voteButton.querySelector('[data-vote-icon]');
+
+                if (! type || ! icon) {
+                    return;
+                }
+
+                setVoteIconState(icon, type, data.vote === type);
+            });
+        } finally {
+            buttons.forEach((voteButton) => {
+                voteButton.disabled = false;
+            });
+        }
+    });
+});
+
 document.querySelectorAll('[data-post-like]').forEach((button) => {
     button.addEventListener('click', async () => {
         const url = button.getAttribute('data-post-like');

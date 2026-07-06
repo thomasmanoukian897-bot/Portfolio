@@ -156,3 +156,193 @@ test('authenticated users see the comment form on published posts', function () 
         ->assertSee('Add a comment')
         ->assertSee('Post comment');
 });
+
+test('authenticated users can reply to a comment', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $parentComment = Comment::factory()->for($post)->create([
+        'body' => 'Original comment',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.reply', [$post, $parentComment]), [
+            'body' => 'Thanks for sharing!',
+        ])
+        ->assertRedirect(route('posts.show', $post)."#comment-{$parentComment->id}")
+        ->assertSessionHas('status');
+
+    $reply = Comment::query()->where('parent_id', $parentComment->id)->first();
+
+    expect($reply)->not->toBeNull();
+    expect($reply->post_id)->toBe($post->id);
+    expect($reply->user_id)->toBe($user->id);
+    expect($reply->body)->toBe('Thanks for sharing!');
+
+    $this->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('Thanks for sharing!')
+        ->assertSee('Reply');
+});
+
+test('users cannot reply to a comment on another post', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $otherPost = Post::factory()->published()->create();
+    $parentComment = Comment::factory()->for($otherPost)->create();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.reply', [$post, $parentComment]), [
+            'body' => 'Sneaky reply',
+        ])
+        ->assertNotFound();
+
+    expect(Comment::query()->where('body', 'Sneaky reply')->exists())->toBeFalse();
+});
+
+test('users cannot reply to a reply', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $parentComment = Comment::factory()->for($post)->create();
+    $reply = Comment::factory()->for($post)->create([
+        'parent_id' => $parentComment->id,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.reply', [$post, $reply]), [
+            'body' => 'Nested too deep',
+        ])
+        ->assertForbidden();
+
+    expect(Comment::query()->where('body', 'Nested too deep')->exists())->toBeFalse();
+});
+
+test('top-level comments ignore any parent_id in the request', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $existingComment = Comment::factory()->for($post)->create();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), [
+            'body' => 'A new top-level comment',
+            'parent_id' => $existingComment->id,
+        ])
+        ->assertRedirect();
+
+    expect(Comment::query()->where('body', 'A new top-level comment')->first()?->parent_id)->toBeNull();
+});
+
+test('posting a top-level comment renders it once on the page', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), [
+            'body' => 'dasssad',
+        ])
+        ->assertRedirect();
+
+    $comment = Comment::query()->first();
+
+    $html = $this->actingAs($user)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->getContent();
+
+    expect(substr_count($html, 'id="comment-'.$comment->id.'"'))->toBe(1);
+    expect(substr_count($html, 'dasssad'))->toBe(1);
+});
+
+test('posting a top-level comment does not create a self-reply', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), [
+            'body' => 'asddasdas',
+        ])
+        ->assertRedirect();
+
+    expect(Comment::count())->toBe(1);
+
+    $comment = Comment::query()->first();
+
+    expect($comment->parent_id)->toBeNull();
+    expect(Comment::query()->where('parent_id', $comment->id)->count())->toBe(0);
+});
+
+test('published posts show a reply button on own comments', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    Comment::factory()->for($post)->for($user)->create([
+        'body' => 'My comment',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('Reply')
+        ->assertSee('My comment');
+});
+
+test('published posts show a reply button on comments', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    Comment::factory()->for($post)->for($author)->create([
+        'body' => 'A comment from someone else',
+    ]);
+
+    $this->actingAs($viewer)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('Reply')
+        ->assertSee('A comment from someone else');
+});
+
+test('duplicate top-level comment submissions are ignored', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), ['body' => 'Only once'])
+        ->assertRedirect();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), ['body' => 'Only once'])
+        ->assertRedirect();
+
+    expect(Comment::query()->count())->toBe(1);
+});
+
+test('users can reply to their own comment', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $comment = Comment::factory()->for($post)->for($user)->create([
+        'body' => 'My own comment',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.reply', [$post, $comment]), [
+            'body' => 'Replying to myself',
+        ])
+        ->assertRedirect(route('posts.show', $post)."#comment-{$comment->id}")
+        ->assertSessionHas('status');
+
+    expect(Comment::query()->where('parent_id', $comment->id)->count())->toBe(1);
+});
+
+test('deleting a parent comment deletes its replies', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $parentComment = Comment::factory()->for($post)->for($user)->create();
+    $reply = Comment::factory()->for($post)->create([
+        'parent_id' => $parentComment->id,
+    ]);
+
+    $this->actingAs($user)
+        ->delete(route('posts.comments.destroy', [$post, $parentComment]))
+        ->assertRedirect(route('posts.show', $post).'#comments');
+
+    expect(Comment::query()->find($parentComment->id))->toBeNull();
+    expect(Comment::query()->find($reply->id))->toBeNull();
+});

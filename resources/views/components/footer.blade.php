@@ -53,7 +53,7 @@
         </div>
 
         <div class="md:col-span-12 pt-12 mt-12 border-t border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-            <p>&copy; {{ date('Y') }} Digital Builder. Engineered for velocity.</p>
+            <p>&copy; {{ date('Y') }} Digital Builder. Engineered for <a href="/squads" target="_blank">velocity</a>.</p>
             <div class="flex gap-6">
                 <a class="hover:text-blue-600 transition-all font-semibold" href="#">Terms of Service</a>
                 <a class="hover:text-blue-600 transition-all font-semibold" href="#">Cookies</a>

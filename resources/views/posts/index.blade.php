@@ -157,7 +157,7 @@
                                 </h2>
 
                                 @if ($post->excerpt)
-                                    <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                                    <p class="text-sm text-slate-600 leading-relaxed mb-6 line-clamp-4">
                                         {{ $post->excerpt }}
                                     </p>
                                 @endif

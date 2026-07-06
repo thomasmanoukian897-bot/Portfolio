@@ -118,35 +118,48 @@
                 </button>
             </div>
 
-            <section id="comments" class="mt-16 pt-12 border-t border-slate-200">
+            <section
+                id="comments"
+                class="mt-16 pt-12 border-t border-slate-200"
+                data-reply-to="{{ session('reply_to') }}"
+                data-reply-body="{{ session('reply_to') ? old('body') : '' }}"
+            >
                 <h2 class="text-2xl font-bold text-slate-900 font-display tracking-tight mb-8">
                     Comments
-                    <span class="text-slate-400 font-normal text-lg">({{ $post->comments->count() }})</span>
+                    <span class="text-slate-400 font-normal text-lg">({{ $post->comments_count }})</span>
                 </h2>
 
                 @auth
-                    <form method="POST" action="{{ route('posts.comments.store', $post) }}" class="mb-10">
+                    <form
+                        id="comment-composer-form"
+                        method="POST"
+                        action="{{ route('posts.comments.store', $post) }}"
+                        class="mb-10"
+                    >
                         @csrf
 
-                        <label for="body" class="block text-sm font-semibold text-slate-700 mb-2">
+                        <label for="comment-body" class="block text-sm font-semibold text-slate-700 mb-2">
                             Add a comment
                         </label>
                         <textarea
-                            id="body"
+                            id="comment-body"
                             name="body"
                             rows="4"
                             required
                             placeholder="Share your thoughts..."
                             class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors @error('body') border-red-300 focus:border-red-400 focus:ring-red-200 @enderror"
-                        >{{ old('body') }}</textarea>
+                        >{{ session('reply_to') ? '' : old('body') }}</textarea>
 
-                        @error('body')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        @if (! session('reply_to'))
+                            @error('body')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        @endif
 
                         <button
                             type="submit"
-                            class="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-blue-700 transition-colors"
+                            id="comment-composer-submit"
+                            class="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
                         >
                             Post comment
                         </button>
@@ -158,46 +171,17 @@
                     </p>
                 @endauth
 
-                @if ($post->comments->isEmpty())
+                @if ($post->comments_count === 0)
                     <p class="text-slate-500 text-sm">No comments yet. Be the first to share your thoughts.</p>
                 @else
                     <ul class="space-y-6">
-                        @foreach ($post->comments as $comment)
-                            <li class="flex gap-4">
-                                <x-user-avatar :user="$comment->user" size="sm" />
-
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-                                        <div class="flex flex-wrap items-center gap-2 text-sm">
-                                            <span class="font-semibold text-slate-900">{{ $comment->user->name }}</span>
-                                            <span class="text-slate-300">&middot;</span>
-                                            <time datetime="{{ $comment->created_at->toDateString() }}" class="text-slate-500">
-                                                {{ $comment->created_at->diffForHumans() }}
-                                            </time>
-                                        </div>
-
-                                        @can('delete', $comment)
-                                            <form
-                                                method="POST"
-                                                action="{{ route('posts.comments.destroy', [$post, $comment]) }}"
-                                                onsubmit="return confirm('Delete this comment?')"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-                                                <button
-                                                    type="submit"
-                                                    aria-label="Delete comment"
-                                                    class="inline-flex items-center justify-center px-2 py-1 rounded text-xs text-red-600 hover:bg-red-50 transition-colors"
-                                                >
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        @endcan
-                                    </div>
-
-                                    <p class="text-slate-700 whitespace-pre-wrap">{{ $comment->body }}</p>
-                                </div>
-                            </li>
+                        @foreach ($post->rootComments as $comment)
+                            <x-comment
+                                :post="$post"
+                                :comment="$comment"
+                                :comment-votes="$commentVotes"
+                                :can-reply="true"
+                            />
                         @endforeach
                     </ul>
                 @endif

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommentVoteController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostLikeController;
@@ -42,9 +43,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('posts.comments.store');
+    Route::post('/posts/{post:slug}/comments/{comment}/replies', [CommentController::class, 'reply'])
+        ->scopeBindings()
+        ->middleware('throttle:10,1')
+        ->name('posts.comments.reply');
     Route::delete('/posts/{post:slug}/comments/{comment}', [CommentController::class, 'destroy'])
         ->scopeBindings()
         ->name('posts.comments.destroy');
+    Route::post('/posts/{post:slug}/comments/{comment}/vote', [CommentVoteController::class, 'store'])
+        ->scopeBindings()
+        ->middleware('throttle:60,1')
+        ->name('posts.comments.vote');
     Route::post('/posts/{post:slug}/like', [PostLikeController::class, 'toggle'])
         ->middleware('throttle:30,1')
         ->name('posts.like.toggle');

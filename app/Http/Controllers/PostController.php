@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CommentVoteType;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Category;
+use App\Models\CommentVote;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
 use Illuminate\Contracts\View\View;
@@ -94,16 +96,45 @@ class PostController extends Controller
             throw new NotFoundHttpException;
         }
 
+        $post->loadCount('comments');
         $post->load([
             'user',
             'categories',
-            'comments' => fn ($query) => $query->with('user')->oldest(),
+            'rootComments' => fn ($query) => $query
+                ->with([
+                    'user',
+                    'replies' => fn ($repliesQuery) => $repliesQuery
+                        ->with('user')
+                        ->withCount([
+                            'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
+                            'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
+                        ])
+                        ->oldest(),
+                ])
+                ->withCount([
+                    'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
+                    'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
+                ])
+                ->oldest(),
         ]);
         $post->loadCount('likes');
+
+        $commentIds = $post->rootComments->flatMap(
+            fn ($comment) => $comment->replies->pluck('id')->prepend($comment->id)
+        );
+
+        $commentVotes = auth()->check()
+            ? CommentVote::query()
+                ->whereIn('comment_id', $commentIds)
+                ->where('user_id', auth()->id())
+                ->get()
+                ->mapWithKeys(fn (CommentVote $vote) => [$vote->comment_id => $vote->type->value])
+            : collect();
 
         return view('posts.show', [
             'post' => $post,
             'isLikedByUser' => $post->isLikedBy(auth()->user()),
+            'commentVotes' => $commentVotes,
         ]);
     }
 
