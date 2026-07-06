@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CommentVoteType;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Category;
+use App\Models\Comment;
 use App\Models\CommentVote;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
@@ -19,6 +20,7 @@ class PostController extends Controller
     public function index(Request $request): View
     {
         $categorySlug = $request->string('category')->toString() ?: null;
+        $search = $request->string('search')->trim()->toString() ?: null;
         $sort = $request->query('sort', 'newest');
 
         if (! in_array($sort, ['newest', 'oldest'], true)) {
@@ -27,12 +29,16 @@ class PostController extends Controller
 
         $categories = Category::query()
             ->whereHas('posts', fn ($query) => $query->published())
+            ->withCount(['posts' => fn ($query) => $query->published()])
             ->orderBy('name')
             ->get();
 
+        $totalPostsCount = Post::query()->published()->count();
+
         $postsQuery = Post::query()
             ->published()
-            ->with(['user', 'categories']);
+            ->with(['user', 'categories'])
+            ->withCount(['likes', 'comments']);
 
         if ($sort === 'oldest') {
             $postsQuery->oldest('published_at');
@@ -46,6 +52,13 @@ class PostController extends Controller
             $categorySlug = null;
         }
 
+        if ($search !== null) {
+            $postsQuery->where(function ($query) use ($search) {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('excerpt', 'like', "%{$search}%");
+            });
+        }
+
         $posts = $postsQuery
             ->paginate(9)
             ->withQueryString();
@@ -53,8 +66,10 @@ class PostController extends Controller
         return view('posts.index', [
             'posts' => $posts,
             'categories' => $categories,
+            'totalPostsCount' => $totalPostsCount,
             'selectedCategory' => $categorySlug,
             'selectedSort' => $sort,
+            'search' => $search,
         ]);
     }
 
@@ -96,31 +111,29 @@ class PostController extends Controller
             throw new NotFoundHttpException;
         }
 
-        $post->loadCount('comments');
-        $post->load([
-            'user',
-            'categories',
-            'rootComments' => fn ($query) => $query
-                ->with([
-                    'user',
-                    'replies' => fn ($repliesQuery) => $repliesQuery
-                        ->with('user')
-                        ->withCount([
-                            'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
-                            'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
-                        ])
-                        ->oldest(),
-                ])
-                ->withCount([
-                    'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
-                    'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
-                ])
-                ->oldest(),
-        ]);
-        $post->loadCount('likes');
+        $post->load(['user', 'categories']);
+        $post->loadCount(['comments', 'likes']);
 
-        $commentIds = $post->rootComments->flatMap(
-            fn ($comment) => $comment->replies->pluck('id')->prepend($comment->id)
+        $comments = $post->rootComments()
+            ->with([
+                'user',
+                'replies' => fn ($repliesQuery) => $repliesQuery
+                    ->with('user')
+                    ->withCount([
+                        'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
+                        'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
+                    ])
+                    ->oldest(),
+            ])
+            ->withCount([
+                'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
+                'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
+            ])
+            ->oldest()
+            ->paginate(Comment::ROOT_PER_PAGE);
+
+        $commentIds = $comments->getCollection()->flatMap(
+            fn (Comment $comment) => $comment->replies->pluck('id')->prepend($comment->id)
         );
 
         $commentVotes = auth()->check()
@@ -133,6 +146,7 @@ class PostController extends Controller
 
         return view('posts.show', [
             'post' => $post,
+            'comments' => $comments,
             'isLikedByUser' => $post->isLikedBy(auth()->user()),
             'commentVotes' => $commentVotes,
         ]);

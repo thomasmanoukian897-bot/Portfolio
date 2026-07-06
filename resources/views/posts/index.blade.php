@@ -9,27 +9,13 @@
         <div class="relative max-w-7xl mx-auto">
             <div class="max-w-3xl">
                 <p class="text-xs font-bold uppercase tracking-[0.2em] text-primary font-mono mb-4">Insights & Updates</p>
-                <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                    <div>
-                        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 font-display tracking-tight mb-4">
-                            Latest Posts
-                        </h1>
-                        <p class="text-lg text-slate-600 leading-relaxed">
-                            Thoughts on web development, design, and building digital products.
-                        </p>
-                    </div>
-
-                    @auth
-                        <a
-                            href="{{ route('posts.create') }}"
-                            class="inline-flex shrink-0 items-center gap-2.5 px-4 py-3 rounded-full bg-slate-900/95 border border-slate-700 text-white hover:bg-slate-800 transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] shadow-lg shadow-black/20 backdrop-blur-md"
-                        >
-                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4 17 6-6-6-6M12 19h8" />
-                            </svg>
-                            <span class="text-xs font-bold font-mono tracking-wider">Write a Post</span>
-                        </a>
-                    @endauth
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-slate-900 font-display tracking-tight mb-4">
+                        Latest Posts
+                    </h1>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Thoughts on web development, design, and building digital products.
+                    </p>
                 </div>
             </div>
         </div>
@@ -44,16 +30,54 @@
             @endif
 
             @php
-                $indexQuery = array_filter([
-                    'category' => $selectedCategory,
+                $allQuery = array_filter([
+                    'search' => $search,
                     'sort' => $selectedSort === 'newest' ? null : $selectedSort,
                 ]);
 
                 $toggleSortQuery = array_filter([
+                    'search' => $search,
                     'category' => $selectedCategory,
                     'sort' => $selectedSort === 'newest' ? 'oldest' : null,
                 ]);
             @endphp
+
+            <div class="mb-8 flex flex-wrap items-center gap-4">
+                <form method="GET" action="{{ route('posts.index') }}" class="max-w-lg">
+                    @if ($selectedCategory)
+                        <input type="hidden" name="category" value="{{ $selectedCategory }}">
+                    @endif
+                    @if ($selectedSort !== 'newest')
+                        <input type="hidden" name="sort" value="{{ $selectedSort }}">
+                    @endif
+                    <label for="post-search" class="sr-only">Search posts</label>
+                    <div class="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2.5 shadow-xs transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-blue-600 dark:border-slate-700 dark:bg-slate-900/50">
+                        <i class="fa-solid fa-magnifying-glass shrink-0 text-sm text-slate-400 dark:text-slate-500" aria-hidden="true"></i>
+                        <input
+                            id="post-search"
+                            type="text"
+                            name="search"
+                            value="{{ $search }}"
+                            placeholder="Search posts..."
+                            role="searchbox"
+                            autocomplete="off"
+                            class="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                    </div>
+                </form>
+
+                @auth
+                    <a
+                        href="{{ route('posts.create') }}"
+                        class="inline-flex shrink-0 items-center justify-center gap-2.5 px-4 py-2.5 rounded-full bg-slate-900/95 border border-slate-700 text-white hover:bg-slate-800 transition-all duration-300 hover:scale-[1.05] active:scale-[0.95] shadow-lg shadow-black/20 backdrop-blur-md"
+                    >
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4 17 6-6-6-6M12 19h8" />
+                        </svg>
+                        <span class="text-xs font-bold font-mono tracking-wider">Write a Post</span>
+                    </a>
+                @endauth
+            </div>
 
             <div @class([
                 'flex flex-wrap items-center gap-4 mb-8',
@@ -63,19 +87,20 @@
                 @if ($categories->isNotEmpty())
                     <div class="flex flex-wrap gap-2">
                         <a
-                            href="{{ route('posts.index', $indexQuery) }}"
+                            href="{{ route('posts.index', $allQuery) }}"
                             @class([
                                 'px-4 py-2 rounded-full text-xs font-bold font-mono uppercase tracking-wider transition-colors',
                                 'bg-slate-900 text-white shadow-sm' => $selectedCategory === null,
                                 'border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-primary' => $selectedCategory !== null,
                             ])
                         >
-                            All
+                            All <span class="tabular-nums opacity-70">({{ $totalPostsCount }})</span>
                         </a>
 
                         @foreach ($categories as $category)
                             <a
                                 href="{{ route('posts.index', array_filter([
+                                    'search' => $search,
                                     'category' => $category->slug,
                                     'sort' => $selectedSort === 'newest' ? null : $selectedSort,
                                 ])) }}"
@@ -85,7 +110,7 @@
                                     'border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-primary' => $selectedCategory !== $category->slug,
                                 ])
                             >
-                                {{ $category->name }}
+                                {{ $category->name }} <span class="tabular-nums opacity-70">({{ $category->posts_count }})</span>
                             </a>
                         @endforeach
                     </div>
@@ -173,19 +198,32 @@
                                         </svg>
                                     </a>
 
-                                    @can('delete', $post)
-                                        <form method="POST" action="{{ route('posts.destroy', $post) }}" onsubmit="return confirm('Delete this post? This cannot be undone.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button
-                                                type="submit"
-                                                aria-label="Delete"
-                                                class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 transition-colors"
-                                            >
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    @endcan
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-3 text-slate-500">
+                                            <span class="inline-flex items-center gap-1.5 text-sm" aria-label="{{ $post->likes_count }} {{ Str::plural('like', $post->likes_count) }}">
+                                                <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                                                <span class="font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                                            </span>
+                                            <span class="inline-flex items-center gap-1.5 text-sm" aria-label="{{ $post->comments_count }} {{ Str::plural('comment', $post->comments_count) }}">
+                                                <i class="fa-solid fa-comment" aria-hidden="true"></i>
+                                                <span class="font-semibold tabular-nums">{{ $post->comments_count }}</span>
+                                            </span>
+                                        </div>
+
+                                        @can('delete', $post)
+                                            <form method="POST" action="{{ route('posts.destroy', $post) }}" onsubmit="return confirm('Delete this post? This cannot be undone.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button
+                                                    type="submit"
+                                                    aria-label="Delete"
+                                                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 transition-colors"
+                                                >
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
                                 </div>
                             </div>
                         </article>
@@ -200,7 +238,9 @@
             @else
                 <div class="rounded-2xl border border-slate-200 bg-white px-8 py-16 text-center">
                     <p class="text-slate-500">
-                        @if ($selectedCategory)
+                        @if ($search)
+                            No posts match your search.
+                        @elseif ($selectedCategory)
                             No posts in this category yet.
                         @else
                             No posts published yet. Check back soon.

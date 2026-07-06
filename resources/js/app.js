@@ -280,6 +280,31 @@ function openReplyForm(button, initialBody = '') {
     });
 }
 
+function repliesToggleLabel(count, expanded) {
+    if (expanded) {
+        return 'Hide replies';
+    }
+
+    return `${count} ${Number(count) === 1 ? 'reply' : 'replies'}`;
+}
+
+document.querySelectorAll('[data-comment-replies-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const commentId = button.getAttribute('data-comment-replies-toggle');
+        const count = button.getAttribute('data-replies-count');
+        const list = document.querySelector(`[data-comment-replies-list="${commentId}"]`);
+
+        if (! commentId || ! list) {
+            return;
+        }
+
+        const expanded = list.classList.toggle('hidden') === false;
+
+        button.setAttribute('aria-expanded', String(expanded));
+        button.textContent = repliesToggleLabel(count, expanded);
+    });
+});
+
 document.querySelectorAll('[data-comment-reply]').forEach((button) => {
     button.addEventListener('click', () => {
         openReplyForm(button);

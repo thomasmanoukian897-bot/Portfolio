@@ -346,3 +346,28 @@ test('deleting a parent comment deletes its replies', function () {
     expect(Comment::query()->find($parentComment->id))->toBeNull();
     expect(Comment::query()->find($reply->id))->toBeNull();
 });
+
+test('root comments are paginated ten per page', function () {
+    $post = Post::factory()->published()->create();
+
+    $comments = Comment::factory()
+        ->count(12)
+        ->for($post)
+        ->sequence(fn ($sequence) => [
+            'body' => 'Comment '.($sequence->index + 1),
+            'created_at' => now()->subMinutes(12 - $sequence->index),
+        ])
+        ->create();
+
+    $this->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('id="comment-'.$comments[0]->id.'"', false)
+        ->assertSee('id="comment-'.$comments[9]->id.'"', false)
+        ->assertDontSee('id="comment-'.$comments[10]->id.'"', false);
+
+    $this->get(route('posts.show', ['post' => $post, 'page' => 2]))
+        ->assertSuccessful()
+        ->assertSee('id="comment-'.$comments[10]->id.'"', false)
+        ->assertSee('id="comment-'.$comments[11]->id.'"', false)
+        ->assertDontSee('id="comment-'.$comments[0]->id.'"', false);
+});

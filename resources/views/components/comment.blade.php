@@ -118,6 +118,27 @@
                         Reply
                     </a>
                 @endauth
+
+                @if ($comment->replies->isNotEmpty())
+                    @php
+                        $repliesExpanded = session('reply_to') == $comment->id;
+                        $repliesCount = $comment->replies->count();
+                    @endphp
+                    <button
+                        type="button"
+                        data-comment-replies-toggle="{{ $comment->id }}"
+                        data-replies-count="{{ $repliesCount }}"
+                        aria-expanded="{{ $repliesExpanded ? 'true' : 'false' }}"
+                        aria-controls="comment-replies-{{ $comment->id }}"
+                        class="text-xs font-semibold text-slate-600 underline underline-offset-2 hover:text-slate-900 transition-colors"
+                    >
+                        @if ($repliesExpanded)
+                            Hide replies
+                        @else
+                            {{ $repliesCount }} {{ Str::plural('reply', $repliesCount) }}
+                        @endif
+                    </button>
+                @endif
             @endif
         </div>
 
@@ -127,7 +148,14 @@
         ></div>
 
         @if ($canReply && $comment->replies->isNotEmpty())
-            <ul class="mt-6 space-y-6 border-l-2 border-slate-100 pl-4">
+            <ul
+                id="comment-replies-{{ $comment->id }}"
+                data-comment-replies-list="{{ $comment->id }}"
+                @class([
+                    'mt-6 space-y-6 border-l-2 border-slate-100 pl-4',
+                    'hidden' => session('reply_to') != $comment->id,
+                ])
+            >
                 @foreach ($comment->replies as $reply)
                     <x-comment
                         :post="$post"

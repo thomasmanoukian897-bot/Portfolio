@@ -71,6 +71,22 @@ class Post extends Model
         return $this->hasMany(Comment::class)->root();
     }
 
+    public function rootCommentPage(Comment $rootComment): int
+    {
+        $position = $this->rootComments()
+            ->oldest()
+            ->where(function (Builder $query) use ($rootComment) {
+                $query->where('created_at', '<', $rootComment->created_at)
+                    ->orWhere(function (Builder $inner) use ($rootComment) {
+                        $inner->where('created_at', $rootComment->created_at)
+                            ->where('id', '<=', $rootComment->id);
+                    });
+            })
+            ->count();
+
+        return max(1, (int) ceil($position / Comment::ROOT_PER_PAGE));
+    }
+
     public function likes(): HasMany
     {
         return $this->hasMany(PostLike::class);

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
 {
+    public const ROOT_PER_PAGE = 10;
+
     /** @use HasFactory<CommentFactory> */
     use HasFactory;
 

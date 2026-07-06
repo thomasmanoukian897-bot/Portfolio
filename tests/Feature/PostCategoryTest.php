@@ -104,6 +104,34 @@ test('admin post edit form includes saved content for the wysiwyg editor', funct
         ->assertSee(e($content), false);
 });
 
+test('posts index can be searched by title or excerpt', function () {
+    $user = User::factory()->create();
+
+    Post::factory()->for($user)->published()->create([
+        'title' => 'Laravel Tips',
+        'excerpt' => 'Helpful advice for beginners.',
+    ]);
+
+    Post::factory()->for($user)->published()->create([
+        'title' => 'Design Systems',
+        'excerpt' => 'Building consistent UI patterns.',
+    ]);
+
+    $this->get(route('posts.index', ['search' => 'Laravel']))
+        ->assertSuccessful()
+        ->assertSee('Laravel Tips')
+        ->assertDontSee('Design Systems');
+
+    $this->get(route('posts.index', ['search' => 'consistent']))
+        ->assertSuccessful()
+        ->assertSee('Design Systems')
+        ->assertDontSee('Laravel Tips');
+
+    $this->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSee('fa-magnifying-glass', false);
+});
+
 test('posts index can be sorted by published date', function () {
     $user = User::factory()->create();
 
@@ -151,7 +179,8 @@ test('posts index can be filtered by category', function () {
     $this->get(route('posts.index', ['category' => 'development']))
         ->assertSuccessful()
         ->assertSee('Dev Post')
-        ->assertDontSee('Design Post');
+        ->assertDontSee('Design Post')
+        ->assertSee('href="'.route('posts.index').'"', false);
 
     $this->get(route('posts.index', ['category' => 'invalid']))
         ->assertSuccessful()

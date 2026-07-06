@@ -175,7 +175,7 @@
                     <p class="text-slate-500 text-sm">No comments yet. Be the first to share your thoughts.</p>
                 @else
                     <ul class="space-y-6">
-                        @foreach ($post->rootComments as $comment)
+                        @foreach ($comments as $comment)
                             <x-comment
                                 :post="$post"
                                 :comment="$comment"
@@ -184,6 +184,12 @@
                             />
                         @endforeach
                     </ul>
+
+                    @if ($comments->hasPages())
+                        <div class="mt-10">
+                            {{ $comments->fragment('comments')->links() }}
+                        </div>
+                    @endif
                 @endif
             </section>
         </div>
