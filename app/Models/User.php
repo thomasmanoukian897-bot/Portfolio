@@ -8,7 +8,10 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -25,6 +28,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'avatar_path',
     ];
 
     /**
@@ -89,5 +93,42 @@ class User extends Authenticatable
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function avatarUrl(): ?string
+    {
+        if ($this->avatar_path === null) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->avatar_path);
+    }
+
+    public function avatarInitial(): string
+    {
+        return Str::upper(Str::substr($this->name, 0, 1));
+    }
+
+    public function storeAvatar(UploadedFile $file): string
+    {
+        $this->deleteAvatar();
+
+        return $file->store('avatars', 'public');
+    }
+
+    public function deleteAvatar(): void
+    {
+        if ($this->avatar_path === null) {
+            return;
+        }
+
+        Storage::disk('public')->delete($this->avatar_path);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user): void {
+            $user->deleteAvatar();
+        });
     }
 }

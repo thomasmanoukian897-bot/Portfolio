@@ -1,6 +1,7 @@
 import './bootstrap';
 import './theme';
 import './portfolio';
+import './profile-dropdown';
 
 const templates = JSON.parse(document.getElementById('exporter-templates-data')?.textContent ?? '[]');
 

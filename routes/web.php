@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SquadsController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::delete('/posts/{post:slug}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'requestPasswordChange'])
+        ->middleware('throttle:3,1')
+        ->name('profile.password.request');
+    Route::post('/profile/password/verify', [ProfileController::class, 'verifyPasswordChange'])
+        ->middleware('throttle:5,1')
+        ->name('profile.password.verify');
 });
 
 Route::get('/posts/{post:slug}', [PostController::class, 'show'])->name('posts.show');
