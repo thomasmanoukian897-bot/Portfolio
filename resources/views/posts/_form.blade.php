@@ -81,19 +81,8 @@
     @enderror
 </div>
 
-<div class="space-y-2">
-    <label for="content" class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">
-        Content
-    </label>
-    <textarea
-        id="content"
-        name="content"
-        rows="12"
-        required
-        class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-xs transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono @error('content') border-red-400 focus:ring-red-500 @enderror"
-    >{{ old('content') }}</textarea>
-    @error('content')
-        <p class="text-sm text-red-600">{{ $message }}</p>
-    @enderror
-    <p class="text-xs text-slate-500">HTML is supported for formatting.</p>
-</div>
+<x-wysiwyg-editor
+    name="content"
+    :value="old('content')"
+    required
+/>

@@ -22,12 +22,13 @@
 
             <header class="mb-10">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                        <x-user-avatar :user="$post->user" size="sm" />
+                        <span>{{ $post->user->name }}</span>
+                        <span class="text-slate-300">&middot;</span>
                         <time datetime="{{ $post->published_at->toDateString() }}">
                             {{ $post->published_at->format('F j, Y') }}
                         </time>
-                        <span class="text-slate-300">&middot;</span>
-                        <span>{{ $post->user->name }}</span>
                     </div>
 
                     @can('delete', $post)

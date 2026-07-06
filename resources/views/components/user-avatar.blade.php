@@ -5,6 +5,7 @@
 
 @php
     $sizeClasses = match ($size) {
+        'xs' => 'w-5 h-5 text-[10px]',
         'sm' => 'w-8 h-8 text-xs',
         'lg' => 'w-20 h-20 text-2xl',
         default => 'w-9 h-9 text-sm',

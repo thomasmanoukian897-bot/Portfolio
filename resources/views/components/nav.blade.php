@@ -36,20 +36,6 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <button
-                type="button"
-                data-theme-toggle
-                aria-label="Switch to dark mode"
-                class="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-                <svg data-theme-icon="dark" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-                </svg>
-                <svg data-theme-icon="light" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-                </svg>
-            </button>
-
             <a
                 href="{{ route('contact') }}"
                 @class([
@@ -148,6 +134,10 @@
                             </a>
                         </div>
 
+                        <div class="border-t border-slate-200 dark:border-slate-700">
+                            <x-theme-slider />
+                        </div>
+
                         <div class="border-t border-slate-200 dark:border-slate-700 py-1">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -165,6 +155,26 @@
                     </div>
                 </div>
             @else
+                <div class="relative" data-profile-dropdown>
+                    <button
+                        type="button"
+                        data-profile-dropdown-toggle
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        aria-label="Settings"
+                        class="flex items-center justify-center w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                    </button>
+
+                    <div
+                        data-profile-dropdown-menu
+                        class="hidden absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-2 z-50"
+                    >
+                        <x-theme-slider />
+                    </div>
+                </div>
+
                 <a
                     href="{{ route('register') }}"
                     @class([

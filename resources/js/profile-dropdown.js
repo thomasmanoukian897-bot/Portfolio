@@ -19,6 +19,10 @@ export function initProfileDropdowns() {
                 toggle.setAttribute('aria-expanded', 'true');
             }
         });
+
+        menu.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
     });
 
     document.addEventListener('click', closeAllProfileDropdowns);

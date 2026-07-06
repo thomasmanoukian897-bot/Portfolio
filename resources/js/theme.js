@@ -11,7 +11,7 @@ export function getTheme() {
 export function setTheme(theme) {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem(THEME_KEY, theme);
-    updateToggleButtons(theme);
+    updateThemeControls(theme);
 }
 
 export function toggleTheme() {
@@ -20,14 +20,19 @@ export function toggleTheme() {
     setTheme(isDark ? 'light' : 'dark');
 }
 
-function updateToggleButtons(theme) {
-    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-        const isDark = theme === 'dark';
+function updateThemeControls(theme) {
+    const isDark = theme === 'dark';
 
+    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
         button.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
 
         button.querySelector('[data-theme-icon="light"]')?.classList.toggle('hidden', isDark);
         button.querySelector('[data-theme-icon="dark"]')?.classList.toggle('hidden', ! isDark);
+    });
+
+    document.querySelectorAll('[data-theme-slider]').forEach((slider) => {
+        slider.checked = isDark;
+        slider.setAttribute('aria-checked', isDark ? 'true' : 'false');
     });
 }
 
@@ -35,4 +40,10 @@ document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
     button.addEventListener('click', toggleTheme);
 });
 
-updateToggleButtons(getTheme());
+document.querySelectorAll('[data-theme-slider]').forEach((slider) => {
+    slider.addEventListener('change', (event) => {
+        setTheme(event.target.checked ? 'dark' : 'light');
+    });
+});
+
+updateThemeControls(getTheme());

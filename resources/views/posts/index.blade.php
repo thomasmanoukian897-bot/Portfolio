@@ -85,12 +85,13 @@
                                 </a>
                             @endif
                             <div class="p-6 flex flex-col flex-1">
-                                <div class="flex items-center gap-3 text-xs text-slate-500 mb-4">
-                                    <time datetime="{{ $post->published_at->toDateString() }}">
-                                        {{ $post->published_at->format('M j, Y') }}
-                                    </time>
-                                    <span class="text-slate-300">&middot;</span>
+                                <div class="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                                    <x-user-avatar :user="$post->user" size="xs" />
                                     <span>{{ $post->user->name }}</span>
+                                    <span class="text-slate-300">&middot;</span>
+                                    <time datetime="{{ $post->published_at->toIso8601String() }}">
+                                        {{ $post->published_at->diffForHumans() }}
+                                    </time>
                                 </div>
 
                                 @if ($post->categories->isNotEmpty())

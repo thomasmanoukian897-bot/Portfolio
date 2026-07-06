@@ -2,6 +2,7 @@ import './bootstrap';
 import './theme';
 import './portfolio';
 import './profile-dropdown';
+import './wysiwyg-editor';
 
 const templates = JSON.parse(document.getElementById('exporter-templates-data')?.textContent ?? '[]');
 
