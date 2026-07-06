@@ -22,6 +22,36 @@ test('admins can create categories', function () {
     expect(Category::query()->where('slug', 'laravel')->exists())->toBeTrue();
 });
 
+test('posts require at least one category', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->from(route('posts.create'))
+        ->post(route('posts.store'), [
+            'title' => 'Uncategorized Post',
+            'content' => '<p>Hello world</p>',
+        ])
+        ->assertRedirect(route('posts.create'))
+        ->assertSessionHasErrors('category_ids');
+
+    expect(Post::query()->where('slug', 'uncategorized-post')->exists())->toBeFalse();
+});
+
+test('admin posts require at least one category', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->from(route('admin.posts.create'))
+        ->post(route('admin.posts.store'), [
+            'title' => 'Uncategorized Post',
+            'content' => '<p>Hello world</p>',
+        ])
+        ->assertRedirect(route('admin.posts.create'))
+        ->assertSessionHasErrors('category_ids');
+
+    expect(Post::query()->where('slug', 'uncategorized-post')->exists())->toBeFalse();
+});
+
 test('admins can assign multiple categories to a post', function () {
     $admin = User::factory()->admin()->create();
     $development = Category::factory()->create(['name' => 'Development', 'slug' => 'development']);
@@ -72,6 +102,32 @@ test('admin post edit form includes saved content for the wysiwyg editor', funct
         ->assertSuccessful()
         ->assertSee('data-wysiwyg-input', false)
         ->assertSee(e($content), false);
+});
+
+test('posts index can be sorted by published date', function () {
+    $user = User::factory()->create();
+
+    $olderPost = Post::factory()->for($user)->published()->create([
+        'title' => 'Older Post',
+        'published_at' => now()->subDays(2),
+    ]);
+
+    $newerPost = Post::factory()->for($user)->published()->create([
+        'title' => 'Newer Post',
+        'published_at' => now()->subDay(),
+    ]);
+
+    $this->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Newer Post', 'Older Post']);
+
+    $this->get(route('posts.index', ['sort' => 'oldest']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Older Post', 'Newer Post']);
+
+    $this->get(route('posts.index', ['sort' => 'invalid']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Newer Post', 'Older Post']);
 });
 
 test('posts index can be filtered by category', function () {
@@ -171,12 +227,14 @@ test('admins can upload an image when creating a post', function () {
     Storage::fake('public');
 
     $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
     $image = UploadedFile::fake()->image('featured.jpg');
 
     $this->actingAs($admin)
         ->post(route('admin.posts.store'), [
             'title' => 'Post with Image',
             'content' => '<p>Hello world</p>',
+            'category_ids' => [$category->id],
             'image' => $image,
         ])
         ->assertRedirect(route('admin.posts.index'));
@@ -192,15 +250,18 @@ test('admins can replace a post image on update', function () {
     Storage::fake('public');
 
     $admin = User::factory()->admin()->create();
+    $category = Category::factory()->create();
     $post = Post::factory()->for($admin)->create([
         'image_path' => UploadedFile::fake()->image('old.jpg')->store('posts', 'public'),
     ]);
+    $post->categories()->attach($category);
     $newImage = UploadedFile::fake()->image('new.jpg');
 
     $this->actingAs($admin)
         ->put(route('admin.posts.update', $post), [
             'title' => $post->title,
             'content' => $post->content,
+            'category_ids' => [$category->id],
             'image' => $newImage,
         ])
         ->assertRedirect(route('admin.posts.index'));
@@ -213,16 +274,44 @@ test('admins can replace a post image on update', function () {
     Storage::disk('public')->assertExists($post->image_path);
 });
 
+test('uploaded post images are cropped to a 16:9 aspect ratio', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+    $image = UploadedFile::fake()->image('tall.jpg', 800, 1200);
+
+    $this->actingAs($user)
+        ->post(route('posts.store'), [
+            'title' => 'Cropped Image Post',
+            'content' => '<p>Hello world</p>',
+            'category_ids' => [$category->id],
+            'image' => $image,
+        ])
+        ->assertRedirect(route('posts.show', 'cropped-image-post'));
+
+    $post = Post::query()->where('slug', 'cropped-image-post')->firstOrFail();
+    $storedImage = imagecreatefromstring(Storage::disk('public')->get($post->image_path));
+
+    expect($storedImage)->not->toBeFalse();
+    expect(imagesx($storedImage))->toBe(1280);
+    expect(imagesy($storedImage))->toBe(720);
+
+    imagedestroy($storedImage);
+});
+
 test('authenticated users can upload an image when publishing a post', function () {
     Storage::fake('public');
 
     $user = User::factory()->create();
+    $category = Category::factory()->create();
     $image = UploadedFile::fake()->image('featured.jpg');
 
     $this->actingAs($user)
         ->post(route('posts.store'), [
             'title' => 'Image Post',
             'content' => '<p>Hello world</p>',
+            'category_ids' => [$category->id],
             'image' => $image,
         ])
         ->assertRedirect(route('posts.show', 'image-post'));

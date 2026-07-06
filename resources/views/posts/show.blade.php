@@ -26,8 +26,8 @@
                         <x-user-avatar :user="$post->user" size="sm" />
                         <span>{{ $post->user->name }}</span>
                         <span class="text-slate-300">&middot;</span>
-                        <time datetime="{{ $post->published_at->toDateString() }}">
-                            {{ $post->published_at->format('F j, Y') }}
+                        <time datetime="{{ $post->published_at->toIso8601String() }}">
+                            {{ $post->published_at->format('H:i / d.m.Y') }}
                         </time>
                     </div>
 
@@ -79,6 +79,43 @@
 
             <div class="text-slate-700 leading-relaxed space-y-4 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-slate-900 [&_h2]:font-display [&_h2]:mt-8 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-slate-900 [&_p]:text-base [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6">
                 {!! $post->content !!}
+            </div>
+
+            <div class="mt-8 flex items-center gap-2">
+                @auth
+                    <button
+                        type="button"
+                        data-post-like="{{ route('posts.like.toggle', $post) }}"
+                        data-csrf="{{ csrf_token() }}"
+                        aria-label="Like"
+                        class="inline-flex items-center gap-2 px-3 h-10 rounded-lg text-slate-600 hover:text-primary border border-slate-200 hover:border-blue-300 bg-white transition-colors disabled:opacity-60"
+                    >
+                        <i
+                            data-like-icon
+                            class="{{ $isLikedByUser ? 'fa-solid fa-heart' : 'fa-regular fa-heart' }}"
+                            @if ($isLikedByUser) style="color: rgb(255, 0, 0);" @endif
+                        ></i>
+                        <span data-like-count class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                    </button>
+                @else
+                    <a
+                        href="{{ route('login') }}"
+                        aria-label="Sign in to like"
+                        class="inline-flex items-center gap-2 px-3 h-10 rounded-lg text-slate-600 hover:text-primary border border-slate-200 hover:border-blue-300 bg-white transition-colors"
+                    >
+                        <i class="fa-regular fa-heart"></i>
+                        <span class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                    </a>
+                @endauth
+
+                <button
+                    type="button"
+                    data-copy-url="{{ url(route('posts.show', $post)) }}"
+                    aria-label="Copy link"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:text-primary border border-slate-200 hover:border-blue-300 bg-white transition-colors"
+                >
+                    <i class="fa-solid fa-link" data-copy-icon></i>
+                </button>
             </div>
 
             <section id="comments" class="mt-16 pt-12 border-t border-slate-200">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePostRequest;
 use App\Models\Category;
 use App\Models\Post;
+use App\Services\FeaturedImageProcessor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,11 @@ class PostController extends Controller
     public function index(Request $request): View
     {
         $categorySlug = $request->string('category')->toString() ?: null;
+        $sort = $request->query('sort', 'newest');
+
+        if (! in_array($sort, ['newest', 'oldest'], true)) {
+            $sort = 'newest';
+        }
 
         $categories = Category::query()
             ->whereHas('posts', fn ($query) => $query->published())
@@ -24,8 +30,13 @@ class PostController extends Controller
 
         $postsQuery = Post::query()
             ->published()
-            ->with(['user', 'categories'])
-            ->latest('published_at');
+            ->with(['user', 'categories']);
+
+        if ($sort === 'oldest') {
+            $postsQuery->oldest('published_at');
+        } else {
+            $postsQuery->latest('published_at');
+        }
 
         if ($categorySlug !== null && $categories->contains('slug', $categorySlug)) {
             $postsQuery->whereHas('categories', fn ($query) => $query->where('slug', $categorySlug));
@@ -41,6 +52,7 @@ class PostController extends Controller
             'posts' => $posts,
             'categories' => $categories,
             'selectedCategory' => $categorySlug,
+            'selectedSort' => $sort,
         ]);
     }
 
@@ -65,7 +77,7 @@ class PostController extends Controller
             'slug' => $this->resolveSlug($validated['title']),
             'published_at' => now(),
             'image_path' => $request->hasFile('image')
-                ? $request->file('image')->store('posts', 'public')
+                ? app(FeaturedImageProcessor::class)->store($request->file('image'))
                 : null,
         ]);
 
@@ -87,9 +99,11 @@ class PostController extends Controller
             'categories',
             'comments' => fn ($query) => $query->with('user')->oldest(),
         ]);
+        $post->loadCount('likes');
 
         return view('posts.show', [
             'post' => $post,
+            'isLikedByUser' => $post->isLikedBy(auth()->user()),
         ]);
     }
 

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StorePostRequest;
 use App\Http\Requests\Admin\UpdatePostRequest;
 use App\Models\Category;
 use App\Models\Post;
+use App\Services\FeaturedImageProcessor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,7 +58,7 @@ class PostController extends Controller
             'user_id' => $request->user()->id,
             'slug' => $this->resolveSlug($validated['title'], $validated['slug'] ?? null),
             'image_path' => $request->hasFile('image')
-                ? $request->file('image')->store('posts', 'public')
+                ? app(FeaturedImageProcessor::class)->store($request->file('image'))
                 : null,
         ]);
 

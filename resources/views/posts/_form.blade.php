@@ -36,12 +36,12 @@
     <p class="text-xs text-slate-500">JPEG, PNG, or WebP up to 2 MB.</p>
 </div>
 
-@if ($categories->isNotEmpty())
-    <div class="space-y-2">
-        <span class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">
-            Categories <span class="text-slate-400 font-normal normal-case">(optional)</span>
-        </span>
+<div class="space-y-2">
+    <span class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">
+        Categories
+    </span>
 
+    @if ($categories->isNotEmpty())
         <div class="grid gap-3 sm:grid-cols-2">
             @foreach ($categories as $category)
                 <label class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-xs cursor-pointer hover:border-blue-200 transition-colors">
@@ -56,15 +56,17 @@
                 </label>
             @endforeach
         </div>
+    @else
+        <p class="text-sm text-slate-500">No categories are available yet. Contact an administrator before publishing.</p>
+    @endif
 
-        @error('category_ids')
-            <p class="text-sm text-red-600">{{ $message }}</p>
-        @enderror
-        @error('category_ids.*')
-            <p class="text-sm text-red-600">{{ $message }}</p>
-        @enderror
-    </div>
-@endif
+    @error('category_ids')
+        <p class="text-sm text-red-600">{{ $message }}</p>
+    @enderror
+    @error('category_ids.*')
+        <p class="text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
 
 <div class="space-y-2">
     <label for="excerpt" class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">

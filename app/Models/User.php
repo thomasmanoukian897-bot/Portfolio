@@ -100,6 +100,11 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    public function postLikes(): HasMany
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
     public function avatarUrl(): ?string
     {
         if ($this->avatar_path === null) {

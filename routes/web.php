@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SquadsController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/posts/{post:slug}/comments/{comment}', [CommentController::class, 'destroy'])
         ->scopeBindings()
         ->name('posts.comments.destroy');
+    Route::post('/posts/{post:slug}/like', [PostLikeController::class, 'toggle'])
+        ->middleware('throttle:30,1')
+        ->name('posts.like.toggle');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

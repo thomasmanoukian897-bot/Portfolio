@@ -144,6 +144,113 @@ function downloadCode() {
     URL.revokeObjectURL(url);
 }
 
+async function copyText(text) {
+    if (navigator.clipboard?.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+
+            return true;
+        } catch {
+            // Fall through to legacy copy method.
+        }
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, text.length);
+
+    let copied = false;
+
+    try {
+        copied = document.execCommand('copy');
+    } catch {
+        copied = false;
+    }
+
+    document.body.removeChild(textarea);
+
+    return copied;
+}
+
+document.querySelectorAll('[data-post-like]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const url = button.getAttribute('data-post-like');
+        const token = button.getAttribute('data-csrf');
+        const icon = button.querySelector('[data-like-icon]');
+        const countEl = button.querySelector('[data-like-count]');
+
+        if (! url || ! token || ! icon || ! countEl) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (! response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            countEl.textContent = String(data.count);
+
+            if (data.liked) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+                icon.style.color = 'rgb(255, 0, 0)';
+            } else {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+                icon.style.color = '';
+            }
+        } finally {
+            button.disabled = false;
+        }
+    });
+});
+
+document.querySelectorAll('[data-copy-url]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const url = button.getAttribute('data-copy-url');
+
+        if (! url) {
+            return;
+        }
+
+        const icon = button.querySelector('[data-copy-icon]');
+        const copied = await copyText(url);
+
+        if (! copied || ! icon) {
+            return;
+        }
+
+        icon.classList.remove('fa-link');
+        icon.classList.add('fa-check');
+
+        setTimeout(() => {
+            icon.classList.remove('fa-check');
+            icon.classList.add('fa-link');
+        }, 2000);
+    });
+});
+
 document.querySelectorAll('[data-exporter-open]').forEach((button) => {
     button.addEventListener('click', openModal);
 });

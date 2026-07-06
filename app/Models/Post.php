@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\FeaturedImageProcessor;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -65,6 +66,20 @@ class Post extends Model
         return $this->hasMany(Comment::class);
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
+    public function isLikedBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->likes()->where('user_id', $user->id)->exists();
+    }
+
     public function isPublished(): bool
     {
         return $this->published_at !== null && $this->published_at->lte(now());
@@ -83,7 +98,7 @@ class Post extends Model
     {
         $this->deleteFeaturedImage();
 
-        return $file->store('posts', 'public');
+        return app(FeaturedImageProcessor::class)->store($file);
     }
 
     public function deleteFeaturedImage(): void
