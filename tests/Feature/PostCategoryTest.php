@@ -62,6 +62,18 @@ test('admins can update post categories', function () {
     expect($post->fresh()->categories->pluck('id')->all())->toBe([$business->id]);
 });
 
+test('admin post edit form includes saved content for the wysiwyg editor', function () {
+    $admin = User::factory()->admin()->create();
+    $content = '<ul><li>Windows 11 Installation</li><li>Laravel</li></ul>';
+    $post = Post::factory()->for($admin)->create(['content' => $content]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.posts.edit', $post))
+        ->assertSuccessful()
+        ->assertSee('data-wysiwyg-input', false)
+        ->assertSee(e($content), false);
+});
+
 test('posts index can be filtered by category', function () {
     $user = User::factory()->create();
     $development = Category::factory()->create(['name' => 'Development', 'slug' => 'development']);

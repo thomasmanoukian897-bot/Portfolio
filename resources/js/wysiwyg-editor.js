@@ -78,12 +78,19 @@ function setMode(wrapper, quill, textarea, htmlSource, mode) {
 }
 
 document.querySelectorAll('[data-wysiwyg-editor]').forEach((wrapper) => {
-    const textarea = wrapper.querySelector('textarea[name]');
+    const textarea = wrapper.querySelector('[data-wysiwyg-input]');
     const editorEl = wrapper.querySelector('[data-wysiwyg-target]');
     const htmlSource = wrapper.querySelector('[data-wysiwyg-html]');
 
     if (! textarea || ! editorEl || ! htmlSource) {
         return;
+    }
+
+    const initialContent = textarea.value;
+
+    if (initialContent) {
+        editorEl.innerHTML = initialContent;
+        htmlSource.value = initialContent;
     }
 
     const quill = new Quill(editorEl, {
@@ -100,9 +107,10 @@ document.querySelectorAll('[data-wysiwyg-editor]').forEach((wrapper) => {
         placeholder: 'Write your post content...',
     });
 
-    if (textarea.value) {
-        quill.root.innerHTML = textarea.value;
-        htmlSource.value = textarea.value;
+    if (initialContent && isEmptyContent(quill.root.innerHTML)) {
+        quill.clipboard.dangerouslyPasteHTML(initialContent);
+        htmlSource.value = quill.root.innerHTML;
+        syncEditorContent(quill, textarea);
     }
 
     wrapper.dataset.wysiwygMode = 'visual';

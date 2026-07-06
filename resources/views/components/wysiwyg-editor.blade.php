@@ -55,6 +55,7 @@
         <textarea
             name="{{ $name }}"
             id="{{ $id }}"
+            data-wysiwyg-input
             class="hidden"
             @required($required)
         >{{ $value }}</textarea>
