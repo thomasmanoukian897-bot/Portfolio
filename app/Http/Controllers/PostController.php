@@ -82,7 +82,11 @@ class PostController extends Controller
             throw new NotFoundHttpException;
         }
 
-        $post->load(['user', 'categories']);
+        $post->load([
+            'user',
+            'categories',
+            'comments' => fn ($query) => $query->with('user')->oldest(),
+        ]);
 
         return view('posts.show', [
             'post' => $post,
