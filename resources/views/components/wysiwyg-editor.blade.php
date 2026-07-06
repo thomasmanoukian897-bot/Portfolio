@@ -16,12 +16,42 @@
 
     <div
         data-wysiwyg-editor
+        data-wysiwyg-mode="visual"
         @class([
-            'wysiwyg-editor rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden transition-all focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent',
+            'wysiwyg-editor rounded-xl border border-slate-200 bg-white shadow-xs transition-all focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent',
             'border-red-400 focus-within:ring-red-500' => $errors->has($name),
         ])
     >
-        <div data-wysiwyg-target class="min-h-[18rem] text-sm text-slate-800"></div>
+        <div class="wysiwyg-editor-modes">
+            <button
+                type="button"
+                data-wysiwyg-mode="visual"
+                class="wysiwyg-mode-active"
+                aria-pressed="true"
+            >
+                Visual
+            </button>
+            <button
+                type="button"
+                data-wysiwyg-mode="html"
+                aria-pressed="false"
+            >
+                HTML
+            </button>
+        </div>
+
+        <div data-wysiwyg-visual>
+            <div data-wysiwyg-target class="min-h-[18rem] text-sm text-slate-800"></div>
+        </div>
+
+        <textarea
+            data-wysiwyg-html
+            class="wysiwyg-html-source"
+            rows="12"
+            spellcheck="false"
+            aria-label="HTML source"
+        >{{ $value }}</textarea>
+
         <textarea
             name="{{ $name }}"
             id="{{ $id }}"
