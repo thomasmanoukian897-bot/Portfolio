@@ -4,7 +4,7 @@
 
 @section('content')
     <section class="relative pt-24 pb-16 px-6 md:px-16 overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-100/60 via-blue-50/20 to-transparent dark:from-slate-950/95 dark:via-slate-900/80 dark:to-slate-900/0 pointer-events-none"></div>
 
         <div class="relative max-w-3xl mx-auto">
             <div class="mb-8">

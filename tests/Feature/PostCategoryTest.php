@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Comment;
 use App\Models\Post;
+use App\Models\PostLike;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -132,18 +134,26 @@ test('posts index can be searched by title or excerpt', function () {
         ->assertSee('fa-magnifying-glass', false);
 });
 
-test('posts index can be sorted by published date', function () {
+test('posts index supports all public sort filters', function () {
     $user = User::factory()->create();
 
     $olderPost = Post::factory()->for($user)->published()->create([
         'title' => 'Older Post',
         'published_at' => now()->subDays(2),
+        'views_count' => 1,
     ]);
 
     $newerPost = Post::factory()->for($user)->published()->create([
         'title' => 'Newer Post',
         'published_at' => now()->subDay(),
+        'views_count' => 9,
     ]);
+
+    PostLike::factory()->for($olderPost)->count(3)->create();
+    PostLike::factory()->for($newerPost)->count(1)->create();
+
+    Comment::factory()->for($olderPost)->for($user)->count(1)->create();
+    Comment::factory()->for($newerPost)->for($user)->count(4)->create();
 
     $this->get(route('posts.index'))
         ->assertSuccessful()
@@ -156,6 +166,30 @@ test('posts index can be sorted by published date', function () {
     $this->get(route('posts.index', ['sort' => 'invalid']))
         ->assertSuccessful()
         ->assertSeeInOrder(['Newer Post', 'Older Post']);
+
+    $this->get(route('posts.index', ['sort' => 'most-liked']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Older Post', 'Newer Post']);
+
+    $this->get(route('posts.index', ['sort' => 'least-liked']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Newer Post', 'Older Post']);
+
+    $this->get(route('posts.index', ['sort' => 'most-commented']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Newer Post', 'Older Post']);
+
+    $this->get(route('posts.index', ['sort' => 'least-commented']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Older Post', 'Newer Post']);
+
+    $this->get(route('posts.index', ['sort' => 'most-viewed']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Newer Post', 'Older Post']);
+
+    $this->get(route('posts.index', ['sort' => 'least-viewed']))
+        ->assertSuccessful()
+        ->assertSeeInOrder(['Older Post', 'Newer Post']);
 });
 
 test('posts index can be filtered by category', function () {
@@ -196,7 +230,8 @@ test('published posts display their categories publicly', function () {
 
     $this->get(route('posts.show', $post))
         ->assertSuccessful()
-        ->assertSee('Development');
+        ->assertSee('Development')
+        ->assertSee(route('posts.index', ['category' => 'development']), false);
 });
 
 test('post unique views are tracked and displayed on the posts index', function () {
@@ -323,7 +358,7 @@ test('admins can replace a post image on update', function () {
     Storage::disk('public')->assertExists($post->image_path);
 });
 
-test('uploaded post images are cropped to a 16:9 aspect ratio', function () {
+test('uploaded post images are resized without cropping', function () {
     Storage::fake('public');
 
     $user = User::factory()->create();
@@ -332,18 +367,18 @@ test('uploaded post images are cropped to a 16:9 aspect ratio', function () {
 
     $this->actingAs($user)
         ->post(route('posts.store'), [
-            'title' => 'Cropped Image Post',
+            'title' => 'Resized Image Post',
             'content' => '<p>Hello world</p>',
             'category_ids' => [$category->id],
             'image' => $image,
         ])
-        ->assertRedirect(route('posts.show', 'cropped-image-post'));
+        ->assertRedirect(route('posts.show', 'resized-image-post'));
 
-    $post = Post::query()->where('slug', 'cropped-image-post')->firstOrFail();
+    $post = Post::query()->where('slug', 'resized-image-post')->firstOrFail();
     $storedImage = imagecreatefromstring(Storage::disk('public')->get($post->image_path));
 
     expect($storedImage)->not->toBeFalse();
-    expect(imagesx($storedImage))->toBe(1280);
+    expect(imagesx($storedImage))->toBe(480);
     expect(imagesy($storedImage))->toBe(720);
 
     imagedestroy($storedImage);
@@ -397,6 +432,19 @@ test('users cannot delete posts they did not create', function () {
         ->assertForbidden();
 
     expect(Post::query()->find($post->id))->not->toBeNull();
+});
+
+test('admins can delete posts created by other users', function () {
+    $admin = User::factory()->admin()->create();
+    $author = User::factory()->create();
+    $post = Post::factory()->for($author)->published()->create(['title' => 'Author Post']);
+
+    $this->actingAs($admin)
+        ->delete(route('posts.destroy', $post))
+        ->assertRedirect(route('posts.index'))
+        ->assertSessionHas('status');
+
+    expect(Post::query()->find($post->id))->toBeNull();
 });
 
 test('guests cannot delete posts', function () {

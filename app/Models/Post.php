@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CommentVoteType;
 use App\Services\FeaturedImageProcessor;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -74,17 +75,19 @@ class Post extends Model
     public function rootCommentPage(Comment $rootComment): int
     {
         $position = $this->rootComments()
+            ->withCount([
+                'votes as upvotes_count' => fn (Builder $votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
+            ])
+            ->orderByDesc('upvotes_count')
             ->oldest()
-            ->where(function (Builder $query) use ($rootComment) {
-                $query->where('created_at', '<', $rootComment->created_at)
-                    ->orWhere(function (Builder $inner) use ($rootComment) {
-                        $inner->where('created_at', $rootComment->created_at)
-                            ->where('id', '<=', $rootComment->id);
-                    });
-            })
-            ->count();
+            ->pluck('id')
+            ->search($rootComment->id);
 
-        return max(1, (int) ceil($position / Comment::ROOT_PER_PAGE));
+        if ($position === false) {
+            return 1;
+        }
+
+        return max(1, (int) ceil(($position + 1) / Comment::ROOT_PER_PAGE));
     }
 
     public function likes(): HasMany

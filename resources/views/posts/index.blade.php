@@ -4,7 +4,7 @@
 
 @section('content')
     <section class="relative pt-24 pb-16 px-6 md:px-16 overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-transparent pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-100/60 via-blue-50/20 to-transparent dark:from-slate-950/95 dark:via-slate-900/80 dark:to-slate-900/0 pointer-events-none"></div>
 
         <div class="relative max-w-7xl mx-auto">
             <div class="max-w-3xl">
@@ -35,11 +35,16 @@
                     'sort' => $selectedSort === 'newest' ? null : $selectedSort,
                 ]);
 
-                $toggleSortQuery = array_filter([
-                    'search' => $search,
-                    'category' => $selectedCategory,
-                    'sort' => $selectedSort === 'newest' ? 'oldest' : null,
-                ]);
+                $sortOptions = [
+                    'newest' => 'Newest first',
+                    'oldest' => 'Oldest first',
+                    'most-liked' => 'Most liked',
+                    'least-liked' => 'Least liked',
+                    'most-commented' => 'Most commented',
+                    'least-commented' => 'Least commented',
+                    'most-viewed' => 'Most viewed',
+                    'least-viewed' => 'Least viewed',
+                ];
             @endphp
 
             <div class="mb-8 flex flex-wrap items-center gap-4">
@@ -116,23 +121,26 @@
                     </div>
                 @endif
 
-                <a
-                    href="{{ route('posts.index', $toggleSortQuery) }}"
-                    class="inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-mono uppercase tracking-wider border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-primary transition-colors"
-                    title="{{ $selectedSort === 'newest' ? 'Switch to oldest first' : 'Switch to newest first' }}"
-                >
-                    @if ($selectedSort === 'newest')
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0-7 7m7-7 7 7" />
-                        </svg>
-                        Newest first
-                    @else
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m0 0 7-7m-7 7-7-7" />
-                        </svg>
-                        Oldest first
+                <form method="GET" action="{{ route('posts.index') }}" class="shrink-0">
+                    @if ($search)
+                        <input type="hidden" name="search" value="{{ $search }}">
                     @endif
-                </a>
+                    @if ($selectedCategory)
+                        <input type="hidden" name="category" value="{{ $selectedCategory }}">
+                    @endif
+
+                    <label for="post-sort" class="sr-only">Sort posts</label>
+                    <select
+                        id="post-sort"
+                        name="sort"
+                        onchange="this.form.submit()"
+                        class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold font-mono uppercase tracking-wider text-slate-600 transition-colors hover:border-blue-300 hover:text-primary focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                        @foreach ($sortOptions as $value => $label)
+                            <option value="{{ $value }}" @selected($selectedSort === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
 
             @if ($posts->isNotEmpty())

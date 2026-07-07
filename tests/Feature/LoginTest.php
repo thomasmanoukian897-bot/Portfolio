@@ -23,6 +23,17 @@ test('users can authenticate using the login form', function () {
     $this->assertAuthenticatedAs($user);
 });
 
+test('admins are redirected to home after login', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->post(route('login'), [
+        'email' => $admin->email,
+        'password' => 'password',
+    ])->assertRedirect(route('home'));
+
+    $this->assertAuthenticatedAs($admin);
+});
+
 test('users cannot authenticate with invalid password', function () {
     $user = User::factory()->create();
 

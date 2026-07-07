@@ -49,9 +49,12 @@
                 @if ($post->categories->isNotEmpty())
                     <div class="flex flex-wrap gap-2 mb-6">
                         @foreach ($post->categories as $category)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest font-mono bg-blue-50 text-blue-700">
+                            <a
+                                href="{{ route('posts.index', ['category' => $category->slug]) }}"
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest font-mono bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                            >
                                 {{ $category->name }}
-                            </span>
+                            </a>
                         @endforeach
                     </div>
                 @endif
@@ -72,7 +75,7 @@
                     <img
                         src="{{ $post->featuredImageUrl() }}"
                         alt="{{ $post->title }}"
-                        class="w-full rounded-2xl border border-slate-200 shadow-sm object-cover max-h-[28rem]"
+                        class="w-full rounded-2xl border border-slate-200 shadow-sm object-contain max-h-[28rem] bg-slate-50"
                     />
                 </div>
             @endif

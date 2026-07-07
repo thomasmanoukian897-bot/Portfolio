@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Comment;
+use App\Models\CommentVote;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -370,4 +371,25 @@ test('root comments are paginated ten per page', function () {
         ->assertSee('id="comment-'.$comments[10]->id.'"', false)
         ->assertSee('id="comment-'.$comments[11]->id.'"', false)
         ->assertDontSee('id="comment-'.$comments[0]->id.'"', false);
+});
+
+test('most liked root comment is shown first', function () {
+    $post = Post::factory()->published()->create();
+    $leastLikedComment = Comment::factory()->for($post)->create([
+        'body' => 'Least liked comment',
+    ]);
+    $mostLikedComment = Comment::factory()->for($post)->create([
+        'body' => 'Most liked comment',
+    ]);
+
+    CommentVote::factory()->upvote()->count(2)->for($mostLikedComment)->create();
+    CommentVote::factory()->upvote()->for($leastLikedComment)->create();
+
+    $response = $this->get(route('posts.show', $post))
+        ->assertSuccessful();
+
+    $response->assertSeeInOrder([
+        'id="comment-'.$mostLikedComment->id.'"',
+        'id="comment-'.$leastLikedComment->id.'"',
+    ], false);
 });

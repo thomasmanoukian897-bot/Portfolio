@@ -23,7 +23,18 @@ class PostController extends Controller
         $search = $request->string('search')->trim()->toString() ?: null;
         $sort = $request->query('sort', 'newest');
 
-        if (! in_array($sort, ['newest', 'oldest'], true)) {
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'most-liked',
+            'least-liked',
+            'most-commented',
+            'least-commented',
+            'most-viewed',
+            'least-viewed',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
             $sort = 'newest';
         }
 
@@ -40,11 +51,16 @@ class PostController extends Controller
             ->with(['user', 'categories'])
             ->withCount(['likes', 'comments']);
 
-        if ($sort === 'oldest') {
-            $postsQuery->oldest('published_at');
-        } else {
-            $postsQuery->latest('published_at');
-        }
+        match ($sort) {
+            'oldest' => $postsQuery->oldest('published_at'),
+            'most-liked' => $postsQuery->orderByDesc('likes_count')->latest('published_at'),
+            'least-liked' => $postsQuery->orderBy('likes_count')->latest('published_at'),
+            'most-commented' => $postsQuery->orderByDesc('comments_count')->latest('published_at'),
+            'least-commented' => $postsQuery->orderBy('comments_count')->latest('published_at'),
+            'most-viewed' => $postsQuery->orderByDesc('views_count')->latest('published_at'),
+            'least-viewed' => $postsQuery->orderBy('views_count')->latest('published_at'),
+            default => $postsQuery->latest('published_at'),
+        };
 
         if ($categorySlug !== null && $categories->contains('slug', $categorySlug)) {
             $postsQuery->whereHas('categories', fn ($query) => $query->where('slug', $categorySlug));
@@ -141,6 +157,7 @@ class PostController extends Controller
                 'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
                 'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
             ])
+            ->orderByDesc('upvotes_count')
             ->oldest()
             ->paginate(Comment::ROOT_PER_PAGE);
 

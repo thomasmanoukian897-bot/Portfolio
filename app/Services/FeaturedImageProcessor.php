@@ -14,56 +14,48 @@ class FeaturedImageProcessor
 
     private const TARGET_HEIGHT = 720;
 
-    private const ASPECT_RATIO = 16 / 9;
-
     public function store(UploadedFile $file, string $directory = 'posts'): string
     {
         $image = $this->loadImage($file);
 
         $sourceWidth = imagesx($image);
         $sourceHeight = imagesy($image);
-        $sourceAspect = $sourceWidth / $sourceHeight;
+        $scale = min(
+            1,
+            self::TARGET_WIDTH / $sourceWidth,
+            self::TARGET_HEIGHT / $sourceHeight
+        );
+        $targetWidth = max(1, (int) round($sourceWidth * $scale));
+        $targetHeight = max(1, (int) round($sourceHeight * $scale));
 
-        if ($sourceAspect > self::ASPECT_RATIO) {
-            $cropHeight = $sourceHeight;
-            $cropWidth = (int) round($sourceHeight * self::ASPECT_RATIO);
-            $cropX = (int) round(($sourceWidth - $cropWidth) / 2);
-            $cropY = 0;
-        } else {
-            $cropWidth = $sourceWidth;
-            $cropHeight = (int) round($sourceWidth / self::ASPECT_RATIO);
-            $cropX = 0;
-            $cropY = (int) round(($sourceHeight - $cropHeight) / 2);
-        }
+        $resized = imagecreatetruecolor($targetWidth, $targetHeight);
 
-        $cropped = imagecreatetruecolor(self::TARGET_WIDTH, self::TARGET_HEIGHT);
-
-        if ($cropped === false) {
+        if ($resized === false) {
             imagedestroy($image);
 
             throw new RuntimeException('Unable to process image.');
         }
 
         imagecopyresampled(
-            $cropped,
+            $resized,
             $image,
             0,
             0,
-            $cropX,
-            $cropY,
-            self::TARGET_WIDTH,
-            self::TARGET_HEIGHT,
-            $cropWidth,
-            $cropHeight,
+            0,
+            0,
+            $targetWidth,
+            $targetHeight,
+            $sourceWidth,
+            $sourceHeight,
         );
 
         imagedestroy($image);
 
         ob_start();
-        imagejpeg($cropped, null, 85);
+        imagejpeg($resized, null, 85);
         $contents = ob_get_clean();
 
-        imagedestroy($cropped);
+        imagedestroy($resized);
 
         if ($contents === false) {
             throw new RuntimeException('Unable to encode image.');

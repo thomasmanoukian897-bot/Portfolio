@@ -1,23 +1,31 @@
-<nav class="sticky top-0 w-full z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 shadow-sm">
-    <div class="flex justify-between items-center px-6 md:px-16 py-4 max-w-7xl mx-auto">
+<nav class="sticky top-0 w-full z-40 relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 shadow-sm">
+    <button
+        type="button"
+        data-mobile-drawer-toggle
+        aria-expanded="false"
+        aria-controls="mobile-drawer-menu"
+        aria-label="Open navigation menu"
+        class="absolute left-4 top-1/2 -translate-y-1/2 z-[60] flex cursor-pointer items-center justify-center w-10 h-10 rounded-full text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 hover:text-slate-900 dark:hover:text-white transition-colors"
+    >
+        <i class="fa-solid fa-bars text-base leading-none" aria-hidden="true"></i>
+    </button>
 
-        <a href="{{ route('home') }}" class="flex items-center gap-3">
+    <div class="relative flex justify-between items-center px-4 md:px-16 py-4 max-w-7xl mx-auto">
+
+        <div class="flex items-center gap-3">
+            <a href="{{ route('home') }}" class="flex items-center gap-3 pl-12 md:pl-0">
             <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                 <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
                 </svg>
             </div>
-            <span class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-display">
-                Digital Builder
-            </span>
-        </a>
+                <span class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-display">
+                    Digital Builder
+                </span>
+            </a>
+        </div>
 
         <div class="hidden md:flex items-center gap-8">
-            <a @class([
-                'text-sm font-semibold transition-all',
-                'text-primary border-b-2 border-primary pb-1' => request()->routeIs('home'),
-                'text-on-surface-variant hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200' => ! request()->routeIs('home'),
-            ]) href="{{ route('home') }}">Home</a>
             <a @class([
                 'text-sm font-semibold transition-all',
                 'text-primary border-b-2 border-primary pb-1' => request()->routeIs('services'),
@@ -200,3 +208,29 @@
         </div>
     </div>
 </nav>
+
+<div
+    data-mobile-drawer-overlay
+    class="fixed inset-x-0 bottom-0 top-[83px] z-40 bg-slate-900/20 dark:bg-slate-900/40 opacity-0 pointer-events-none transition-opacity duration-300"
+></div>
+
+<aside
+    id="mobile-drawer-menu"
+    data-mobile-drawer
+    class="fixed top-[83px] bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 border-t border-slate-200 dark:border-slate-700 shadow-xl transform -translate-x-full transition-transform duration-300 ease-out pointer-events-none"
+    aria-hidden="true"
+>
+    <nav class="px-4 pt-4 pb-6">
+        <a
+            href="{{ route('home') }}"
+            @class([
+                'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                'text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80' => request()->routeIs('home'),
+                'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! request()->routeIs('home'),
+            ])
+        >
+            <i class="fa-solid fa-house w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+            <span>Home</span>
+        </a>
+    </nav>
+</aside>

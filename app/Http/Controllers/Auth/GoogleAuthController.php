@@ -55,10 +55,6 @@ class GoogleAuthController extends Controller
         Auth::login($user, true);
         request()->session()->regenerate();
 
-        $default = $user->isAdmin()
-            ? route('admin.dashboard')
-            : route('home');
-
-        return redirect()->intended($default);
+        return redirect()->intended(route('home'));
     }
 }
