@@ -208,6 +208,10 @@
                                                 <i class="fa-solid fa-comment" aria-hidden="true"></i>
                                                 <span class="font-semibold tabular-nums">{{ $post->comments_count }}</span>
                                             </span>
+                                            <span class="inline-flex items-center gap-1.5 text-sm" aria-label="{{ $post->views_count }} {{ Str::plural('view', $post->views_count) }}">
+                                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                                <span class="font-semibold tabular-nums">{{ $post->views_count }}</span>
+                                            </span>
                                         </div>
 
                                         @can('delete', $post)

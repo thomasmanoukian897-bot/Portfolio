@@ -199,6 +199,26 @@ test('published posts display their categories publicly', function () {
         ->assertSee('Development');
 });
 
+test('post unique views are tracked and displayed on the posts index', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = Post::factory()->for($author)->published()->create([
+        'title' => 'Viewed Post',
+    ]);
+
+    $this->get(route('posts.show', $post))->assertSuccessful();
+    $this->get(route('posts.show', $post))->assertSuccessful();
+    $this->actingAs($viewer)->get(route('posts.show', $post))->assertSuccessful();
+
+    expect($post->fresh()->views_count)->toBe(2);
+
+    $this->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSee('fa-eye', false)
+        ->assertSee('Viewed Post')
+        ->assertSee('2');
+});
+
 test('deleting a category detaches it from posts', function () {
     $admin = User::factory()->admin()->create();
     $category = Category::factory()->create();

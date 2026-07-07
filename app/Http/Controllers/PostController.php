@@ -111,6 +111,18 @@ class PostController extends Controller
             throw new NotFoundHttpException;
         }
 
+        $viewerIdentifier = auth()->check()
+            ? 'user:'.auth()->id()
+            : 'guest:'.request()->ip();
+
+        $view = $post->views()->firstOrCreate([
+            'viewer_identifier' => $viewerIdentifier,
+        ]);
+
+        if ($view->wasRecentlyCreated) {
+            $post->increment('views_count');
+        }
+
         $post->load(['user', 'categories']);
         $post->loadCount(['comments', 'likes']);
 

@@ -92,6 +92,11 @@ class Post extends Model
         return $this->hasMany(PostLike::class);
     }
 
+    public function views(): HasMany
+    {
+        return $this->hasMany(PostView::class);
+    }
+
     public function isLikedBy(?User $user): bool
     {
         if ($user === null) {

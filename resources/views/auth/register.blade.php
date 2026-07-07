@@ -32,6 +32,22 @@
                     </div>
                 @endif
 
+                <a
+                    href="{{ route('auth.google.redirect') }}"
+                    class="w-full mb-6 px-6 py-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border border-slate-200 transition-all shadow-xs"
+                >
+                    Continue with Google
+                </a>
+
+                <div class="relative mb-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <span class="w-full border-t border-slate-200"></span>
+                    </div>
+                    <div class="relative flex justify-center text-xs uppercase">
+                        <span class="bg-white px-2 text-slate-500 font-mono tracking-widest">or create account with email</span>
+                    </div>
+                </div>
+
                 <form method="POST" action="{{ route('register') }}" class="space-y-6">
                     @csrf
 
