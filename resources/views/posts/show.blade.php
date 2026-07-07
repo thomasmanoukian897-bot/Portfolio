@@ -84,6 +84,11 @@
                 {!! $post->content !!}
             </div>
 
+            @php
+                $postActionButtonClass = 'inline-flex items-center gap-2 px-3 h-10 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:border-primary dark:hover:border-blue-400 hover:text-primary dark:hover:text-blue-400 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed';
+                $postIconButtonClass = 'inline-flex items-center justify-center w-10 h-10 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:border-primary dark:hover:border-blue-400 hover:text-primary dark:hover:text-blue-400 active:scale-95 transition-all';
+            @endphp
+
             <div class="mt-8 flex items-center gap-2">
                 @auth
                     <button
@@ -91,7 +96,7 @@
                         data-post-like="{{ route('posts.like.toggle', $post) }}"
                         data-csrf="{{ csrf_token() }}"
                         aria-label="Like"
-                        class="inline-flex items-center gap-2 px-3 h-10 rounded-lg text-slate-600 hover:text-primary border border-slate-200 hover:border-blue-300 bg-white transition-colors disabled:opacity-60"
+                        class="{{ $postActionButtonClass }}"
                     >
                         <i
                             data-like-icon
@@ -104,7 +109,7 @@
                     <a
                         href="{{ route('login') }}"
                         aria-label="Sign in to like"
-                        class="inline-flex items-center gap-2 px-3 h-10 rounded-lg text-slate-600 hover:text-primary border border-slate-200 hover:border-blue-300 bg-white transition-colors"
+                        class="{{ $postActionButtonClass }}"
                     >
                         <i class="fa-regular fa-heart"></i>
                         <span class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
@@ -115,10 +120,34 @@
                     type="button"
                     data-copy-url="{{ url(route('posts.show', $post)) }}"
                     aria-label="Copy link"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-lg text-slate-600 hover:text-primary border border-slate-200 hover:border-blue-300 bg-white transition-colors"
+                    class="{{ $postIconButtonClass }}"
                 >
                     <i class="fa-solid fa-link" data-copy-icon></i>
                 </button>
+
+                @auth
+                    <button
+                        type="button"
+                        data-post-bookmark="{{ route('posts.bookmark.toggle', $post) }}"
+                        data-csrf="{{ csrf_token() }}"
+                        aria-label="Save"
+                        class="{{ $postIconButtonClass }}"
+                    >
+                        <i
+                            data-bookmark-icon
+                            class="{{ $isBookmarkedByUser ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark' }}"
+                            @if ($isBookmarkedByUser) style="color: rgb(255, 212, 59);" @endif
+                        ></i>
+                    </button>
+                @else
+                    <a
+                        href="{{ route('login') }}"
+                        aria-label="Sign in to save"
+                        class="{{ $postIconButtonClass }}"
+                    >
+                        <i class="fa-regular fa-bookmark"></i>
+                    </a>
+                @endauth
             </div>
 
             <section

@@ -452,6 +452,50 @@ document.querySelectorAll('[data-post-like]').forEach((button) => {
     });
 });
 
+document.querySelectorAll('[data-post-bookmark]').forEach((button) => {
+    button.addEventListener('click', async () => {
+        const url = button.getAttribute('data-post-bookmark');
+        const token = button.getAttribute('data-csrf');
+        const icon = button.querySelector('[data-bookmark-icon]');
+
+        if (! url || ! token || ! icon) {
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (! response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.bookmarked) {
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+                icon.style.color = 'rgb(255, 212, 59)';
+            } else {
+                icon.classList.remove('fa-solid');
+                icon.classList.add('fa-regular');
+                icon.style.color = '';
+            }
+        } finally {
+            button.disabled = false;
+        }
+    });
+});
+
 document.querySelectorAll('[data-copy-url]').forEach((button) => {
     button.addEventListener('click', async () => {
         const url = button.getAttribute('data-copy-url');

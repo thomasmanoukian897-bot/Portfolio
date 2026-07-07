@@ -10,9 +10,11 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentVoteController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\PostBookmarkController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\SquadsController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +36,11 @@ Route::get('/contact', [ContactController::class, 'create'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('contact.store');
+
+Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
+Route::post('/reservations', [ReservationController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('reservations.store');
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 
@@ -58,6 +65,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post:slug}/like', [PostLikeController::class, 'toggle'])
         ->middleware('throttle:30,1')
         ->name('posts.like.toggle');
+    Route::post('/posts/{post:slug}/bookmark', [PostBookmarkController::class, 'toggle'])
+        ->middleware('throttle:30,1')
+        ->name('posts.bookmark.toggle');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

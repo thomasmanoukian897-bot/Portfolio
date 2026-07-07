@@ -177,6 +177,7 @@ class PostController extends Controller
             'post' => $post,
             'comments' => $comments,
             'isLikedByUser' => $post->isLikedBy(auth()->user()),
+            'isBookmarkedByUser' => $post->isBookmarkedBy(auth()->user()),
             'commentVotes' => $commentVotes,
         ]);
     }

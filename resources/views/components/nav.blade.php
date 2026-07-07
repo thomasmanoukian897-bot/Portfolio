@@ -41,6 +41,11 @@
                 'text-primary border-b-2 border-primary pb-1' => request()->routeIs('posts.*'),
                 'text-on-surface-variant hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200' => ! request()->routeIs('posts.*'),
             ]) href="{{ route('posts.index') }}">Blog</a>
+            <a @class([
+                'text-sm font-semibold transition-all',
+                'text-primary border-b-2 border-primary pb-1' => request()->routeIs('reservations.*'),
+                'text-on-surface-variant hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200' => ! request()->routeIs('reservations.*'),
+            ]) href="{{ route('reservations.index') }}">Book</a>
         </div>
 
         <div class="flex items-center gap-3">
@@ -231,6 +236,17 @@
         >
             <i class="fa-solid fa-house w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
             <span>Home</span>
+        </a>
+        <a
+            href="{{ route('reservations.index') }}"
+            @class([
+                'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                'text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80' => request()->routeIs('reservations.*'),
+                'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! request()->routeIs('reservations.*'),
+            ])
+        >
+            <i class="fa-solid fa-calendar w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+            <span>Book a Session</span>
         </a>
     </nav>
 </aside>

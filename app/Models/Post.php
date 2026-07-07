@@ -95,6 +95,11 @@ class Post extends Model
         return $this->hasMany(PostLike::class);
     }
 
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(PostBookmark::class);
+    }
+
     public function views(): HasMany
     {
         return $this->hasMany(PostView::class);
@@ -107,6 +112,15 @@ class Post extends Model
         }
 
         return $this->likes()->where('user_id', $user->id)->exists();
+    }
+
+    public function isBookmarkedBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->bookmarks()->where('user_id', $user->id)->exists();
     }
 
     public function isPublished(): bool
