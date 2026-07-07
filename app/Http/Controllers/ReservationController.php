@@ -20,7 +20,7 @@ class ReservationController extends Controller
     {
         $timezone = config('reservations.timezone');
         $selectedDate = $this->resolveSelectedDate($request, $timezone);
-        $slots = $availability->availableSlotsForDate($selectedDate);
+        $slots = $availability->slotsForDate($selectedDate);
 
         $minDate = now()->timezone($timezone)->toDateString();
         $maxDate = now()->timezone($timezone)->addDays(config('reservations.advance_days'))->toDateString();
@@ -30,6 +30,7 @@ class ReservationController extends Controller
             'minDate' => $minDate,
             'maxDate' => $maxDate,
             'slots' => $slots,
+            'hasAvailableSlots' => $slots->contains(fn (array $slot) => $slot['available']),
             'timezone' => $timezone,
             'durationMinutes' => config('reservations.duration_minutes'),
             'calendarConfigured' => app(GoogleCalendarService::class)->isConfigured(),

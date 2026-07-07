@@ -96,6 +96,17 @@ test('authenticated users have reservations linked to their account', function (
     ]);
 });
 
+test('reservation page shows past time slots as unavailable', function () {
+    Carbon::setTestNow(Carbon::parse('2026-07-07 11:00:00', 'UTC'));
+
+    $this->get(route('reservations.index', ['date' => '2026-07-07']))
+        ->assertSuccessful()
+        ->assertSee('9:00 AM')
+        ->assertSee('10:00 AM')
+        ->assertSee('11:00 AM')
+        ->assertSee('title="Not Available"', false);
+});
+
 test('users cannot book an already reserved time slot', function () {
     $startsAt = Carbon::parse('2026-07-08 10:00:00', 'UTC');
 
@@ -103,6 +114,12 @@ test('users cannot book an already reserved time slot', function () {
         'starts_at' => $startsAt,
         'ends_at' => $startsAt->copy()->addHour(),
     ]);
+
+    $this->get(route('reservations.index', ['date' => '2026-07-08']))
+        ->assertSuccessful()
+        ->assertSee('10:00 AM')
+        ->assertSee('title="Reserved"', false)
+        ->assertSee('disabled', false);
 
     $this->post(route('reservations.store'), [
         'name' => 'John Smith',
@@ -141,8 +158,9 @@ test('google calendar busy periods block available slots', function () {
 
     $response->assertSuccessful();
     $response->assertSee('9:00 AM');
-    $response->assertDontSee('10:00 AM');
+    $response->assertSee('10:00 AM');
     $response->assertSee('11:00 AM');
+    $response->assertSee('disabled', false);
 });
 
 test('google calendar event is created when calendar is configured', function () {

@@ -35,4 +35,12 @@ class GoogleCalendarGateway
     {
         $this->calendar->events->delete($calendarId, $eventId);
     }
+
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function updateEvent(string $calendarId, string $eventId, Event $event, array $options = []): Event
+    {
+        return $this->calendar->events->update($calendarId, $eventId, $event, $options);
+    }
 }

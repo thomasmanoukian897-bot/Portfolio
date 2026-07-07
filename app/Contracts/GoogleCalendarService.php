@@ -17,5 +17,7 @@ interface GoogleCalendarService
 
     public function createEvent(Reservation $reservation): string;
 
+    public function updateEvent(Reservation $reservation): void;
+
     public function deleteEvent(Reservation $reservation): void;
 }

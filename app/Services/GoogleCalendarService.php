@@ -119,6 +119,45 @@ class GoogleCalendarService implements GoogleCalendarServiceContract
         return $eventId;
     }
 
+    public function updateEvent(Reservation $reservation): void
+    {
+        if (! $this->isConfigured() || $reservation->google_event_id === null) {
+            return;
+        }
+
+        try {
+            $calendar = $this->clientFactory->make();
+            $timezone = config('reservations.timezone');
+
+            $event = $calendar->getEvent(
+                config('services.google.calendar_id'),
+                $reservation->google_event_id,
+            );
+
+            $event->setStart(new EventDateTime([
+                'dateTime' => $reservation->starts_at->timezone($timezone)->toRfc3339String(),
+                'timeZone' => $timezone,
+            ]));
+            $event->setEnd(new EventDateTime([
+                'dateTime' => $reservation->ends_at->timezone($timezone)->toRfc3339String(),
+                'timeZone' => $timezone,
+            ]));
+
+            $calendar->updateEvent(
+                config('services.google.calendar_id'),
+                $reservation->google_event_id,
+                $event,
+                ['sendUpdates' => $this->clientFactory->usesServiceAccount() ? 'none' : 'all'],
+            );
+        } catch (Throwable $exception) {
+            Log::error('Failed to update Google Calendar event for reservation', [
+                'reservation_id' => $reservation->id,
+                'google_event_id' => $reservation->google_event_id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
+    }
+
     public function deleteEvent(Reservation $reservation): void
     {
         if (! $this->isConfigured() || $reservation->google_event_id === null) {

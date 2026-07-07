@@ -87,11 +87,17 @@
                             @foreach ($slots as $slot)
                                 <button
                                     type="button"
-                                    data-slot="{{ $slot->toIso8601String() }}"
-                                    data-slot-label="{{ $slot->format('g:i A') }}"
-                                    class="slot-button rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-100 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all"
+                                    data-slot="{{ $slot['starts_at']->toIso8601String() }}"
+                                    data-slot-label="{{ $slot['starts_at']->format('g:i A') }}"
+                                    @disabled(! $slot['available'])
+                                    @if (($slot['unavailable_reason'] ?? null) === 'past')
+                                        title="Not Available"
+                                    @elseif (! $slot['available'])
+                                        title="Reserved"
+                                    @endif
+                                    class="slot-button rounded-xl border px-4 py-3 text-sm font-semibold transition-all @if ($slot['available']) border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 @elseif (($slot['unavailable_reason'] ?? null) === 'past') border-red-200/60 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-400/80 cursor-not-allowed opacity-70 @else border-slate-200/50 dark:border-slate-700/50 bg-slate-100 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-60 @endif"
                                 >
-                                    {{ $slot->format('g:i A') }}
+                                    {{ $slot['starts_at']->format('g:i A') }}
                                 </button>
                             @endforeach
                         </div>
@@ -102,7 +108,7 @@
                     id="reservation-form"
                     method="POST"
                     action="{{ route('reservations.store') }}"
-                    class="space-y-6 @if ($slots->isEmpty()) hidden @endif"
+                    class="space-y-6 @if (! $hasAvailableSlots) hidden @endif"
                 >
                     @csrf
 
@@ -199,7 +205,13 @@
             };
 
             slotButtons.forEach((button) => {
-                button.addEventListener('click', () => selectSlot(button));
+                button.addEventListener('click', () => {
+                    if (button.disabled) {
+                        return;
+                    }
+
+                    selectSlot(button);
+                });
             });
 
             if (startsAtInput.value) {

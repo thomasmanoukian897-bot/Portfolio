@@ -88,12 +88,12 @@
                         aria-expanded="false"
                         aria-haspopup="true"
                         @class([
-                            'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:scale-[1.02] active:scale-[0.98]',
+                            'flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold border transition-all hover:scale-[1.02] active:scale-[0.98]',
                             'bg-primary/10 text-primary border-primary/20' => request()->routeIs('profile.*'),
                             'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600' => ! request()->routeIs('profile.*'),
                         ])
                     >
-                        <x-user-avatar :user="auth()->user()" size="sm" />
+                        <x-user-avatar :user="auth()->user()" size="nav" />
                         <span class="hidden sm:inline">Profile</span>
                         <svg class="w-4 h-4 hidden sm:block opacity-60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />

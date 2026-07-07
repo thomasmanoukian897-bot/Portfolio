@@ -1,10 +1,36 @@
 <?php
 
+use App\Contracts\GoogleCalendarService;
 use App\Enums\UserRole;
+use App\Models\Reservation;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    config([
+        'reservations.timezone' => 'UTC',
+        'reservations.start_hour' => 9,
+        'reservations.end_hour' => 17,
+        'reservations.duration_minutes' => 60,
+        'reservations.advance_days' => 30,
+        'reservations.slot_interval_minutes' => 60,
+    ]);
+
+    Carbon::setTestNow(Carbon::parse('2026-07-07 08:00:00', 'UTC'));
+
+    $this->mock(GoogleCalendarService::class, function ($mock) {
+        $mock->shouldReceive('deleteEvent')->andReturnNull();
+        $mock->shouldReceive('updateEvent')->andReturnNull();
+        $mock->shouldReceive('getBusyPeriods')->andReturn(collect());
+    });
+});
+
+afterEach(function () {
+    Carbon::setTestNow();
+});
 
 test('guests cannot access admin dashboard', function () {
     $this->get(route('admin.dashboard'))
@@ -87,4 +113,92 @@ test('admins are redirected to admin dashboard after login', function () {
     ])->assertRedirect(route('admin.dashboard'));
 
     $this->assertAuthenticatedAs($admin);
+});
+
+test('regular users cannot access admin bookings', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('admin.bookings.index'))
+        ->assertForbidden();
+});
+
+test('admins can list bookings', function () {
+    $admin = User::factory()->admin()->create();
+    $booking = Reservation::factory()->create(['name' => 'Jane Doe']);
+
+    $this->actingAs($admin)
+        ->get(route('admin.bookings.index'))
+        ->assertSuccessful()
+        ->assertSee('Jane Doe')
+        ->assertSee('Bookings');
+});
+
+test('admins can cancel bookings', function () {
+    $admin = User::factory()->admin()->create();
+    $booking = Reservation::factory()->create(['name' => 'Jane Doe']);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.bookings.destroy', $booking))
+        ->assertRedirect(route('admin.bookings.index'))
+        ->assertSessionHas('status');
+
+    expect(Reservation::find($booking->id))->toBeNull();
+});
+
+test('admins can edit bookings', function () {
+    $admin = User::factory()->admin()->create();
+    $booking = Reservation::factory()->create([
+        'name' => 'Jane Doe',
+        'starts_at' => Carbon::parse('2026-07-08 10:00:00', 'UTC'),
+        'ends_at' => Carbon::parse('2026-07-08 11:00:00', 'UTC'),
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.bookings.edit', $booking))
+        ->assertSuccessful()
+        ->assertSee('Jane Doe')
+        ->assertSee('10:00 AM');
+});
+
+test('admins can update booking time', function () {
+    $admin = User::factory()->admin()->create();
+    $booking = Reservation::factory()->create([
+        'starts_at' => Carbon::parse('2026-07-08 10:00:00', 'UTC'),
+        'ends_at' => Carbon::parse('2026-07-08 11:00:00', 'UTC'),
+    ]);
+    $newStartsAt = Carbon::parse('2026-07-08 14:00:00', 'UTC');
+
+    $this->actingAs($admin)
+        ->put(route('admin.bookings.update', $booking), [
+            'starts_at' => $newStartsAt->toIso8601String(),
+        ])
+        ->assertRedirect(route('admin.bookings.index'))
+        ->assertSessionHas('status');
+
+    $booking->refresh();
+
+    expect($booking->starts_at->timezone('UTC')->format('Y-m-d H:i:s'))->toBe('2026-07-08 14:00:00');
+    expect($booking->ends_at->timezone('UTC')->format('Y-m-d H:i:s'))->toBe('2026-07-08 15:00:00');
+});
+
+test('admins cannot update booking to an already reserved slot', function () {
+    $admin = User::factory()->admin()->create();
+    $booking = Reservation::factory()->create([
+        'starts_at' => Carbon::parse('2026-07-08 10:00:00', 'UTC'),
+        'ends_at' => Carbon::parse('2026-07-08 11:00:00', 'UTC'),
+    ]);
+
+    Reservation::factory()->create([
+        'starts_at' => Carbon::parse('2026-07-08 14:00:00', 'UTC'),
+        'ends_at' => Carbon::parse('2026-07-08 15:00:00', 'UTC'),
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.bookings.update', $booking), [
+            'starts_at' => Carbon::parse('2026-07-08 14:00:00', 'UTC')->toIso8601String(),
+        ])
+        ->assertSessionHasErrors('starts_at');
+
+    expect($booking->fresh()->starts_at->timezone('UTC')->format('H:i'))->toBe('10:00');
 });

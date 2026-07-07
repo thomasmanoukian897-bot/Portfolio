@@ -7,6 +7,16 @@ use App\Models\User;
 
 class ReservationPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->isAdmin();
+    }
+
+    public function update(User $user, Reservation $reservation): bool
+    {
+        return $user->isAdmin();
+    }
+
     public function delete(User $user, Reservation $reservation): bool
     {
         return $user->isAdmin() || $user->id === $reservation->user_id;

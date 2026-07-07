@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
@@ -109,4 +110,5 @@ Route::prefix('admin')
         Route::resource('users', UserController::class)->except(['create', 'store', 'show']);
         Route::resource('categories', CategoryController::class)->except(['show']);
         Route::resource('posts', AdminPostController::class)->except(['show']);
+        Route::resource('bookings', BookingController::class)->only(['index', 'edit', 'update', 'destroy'])->parameters(['bookings' => 'reservation']);
     });
