@@ -118,4 +118,25 @@ class GoogleCalendarService implements GoogleCalendarServiceContract
 
         return $eventId;
     }
+
+    public function deleteEvent(Reservation $reservation): void
+    {
+        if (! $this->isConfigured() || $reservation->google_event_id === null) {
+            return;
+        }
+
+        try {
+            $calendar = $this->clientFactory->make();
+            $calendar->deleteEvent(
+                config('services.google.calendar_id'),
+                $reservation->google_event_id,
+            );
+        } catch (Throwable $exception) {
+            Log::error('Failed to delete Google Calendar event for reservation', [
+                'reservation_id' => $reservation->id,
+                'google_event_id' => $reservation->google_event_id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
+    }
 }

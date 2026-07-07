@@ -106,6 +106,16 @@ class User extends Authenticatable
         return $this->hasMany(PostLike::class);
     }
 
+    public function postBookmarks(): HasMany
+    {
+        return $this->hasMany(PostBookmark::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
     public function commentVotes(): HasMany
     {
         return $this->hasMany(CommentVote::class);

@@ -106,6 +106,19 @@ class ReservationController extends Controller
             ->with('success', 'Your reservation has been confirmed for '.$startsAt->format('l, F j, Y \a\t g:i A').'.');
     }
 
+    public function destroy(Reservation $reservation, GoogleCalendarService $googleCalendar): RedirectResponse
+    {
+        $this->authorize('delete', $reservation);
+
+        $googleCalendar->deleteEvent($reservation);
+
+        $reservation->delete();
+
+        return redirect()
+            ->route('library.index', ['section' => 'bookings'])
+            ->with('status', 'Your booking has been cancelled.');
+    }
+
     private function resolveSelectedDate(Request $request, string $timezone): Carbon
     {
         $date = $request->string('date')->toString();

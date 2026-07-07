@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentVoteController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\PostBookmarkController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostLikeController;
@@ -68,6 +69,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post:slug}/bookmark', [PostBookmarkController::class, 'toggle'])
         ->middleware('throttle:30,1')
         ->name('posts.bookmark.toggle');
+
+    Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
+
+    Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

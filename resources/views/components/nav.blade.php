@@ -248,5 +248,109 @@
             <i class="fa-solid fa-calendar w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
             <span>Book a Session</span>
         </a>
+
+        @auth
+            @php
+                $libraryOpen = request()->routeIs('library.*');
+            @endphp
+            <div class="mt-2" data-library-dropdown>
+                <div
+                    @class([
+                        'flex items-stretch rounded-lg overflow-hidden',
+                        'bg-slate-100 dark:bg-slate-800/80' => $libraryOpen,
+                    ])
+                >
+                    <a
+                        href="{{ route('library.index') }}"
+                        @class([
+                            'flex flex-1 items-center gap-3 px-4 py-3 text-base font-medium transition-colors min-w-0',
+                            'text-slate-900 dark:text-slate-100' => $libraryOpen,
+                            'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! $libraryOpen,
+                        ])
+                    >
+                        <i class="fa-solid fa-book-bookmark w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+                        <span>Library</span>
+                    </a>
+                    <button
+                        type="button"
+                        data-library-dropdown-toggle
+                        aria-expanded="{{ $libraryOpen ? 'true' : 'false' }}"
+                        aria-controls="library-submenu"
+                        aria-label="Toggle library menu"
+                        @class([
+                            'flex items-center justify-center px-3 transition-colors',
+                            'text-slate-900 dark:text-slate-100 hover:bg-slate-200/60 dark:hover:bg-slate-700/60' => $libraryOpen,
+                            'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! $libraryOpen,
+                        ])
+                    >
+                        <svg
+                            data-library-dropdown-chevron
+                            @class([
+                                'w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200',
+                                'rotate-180' => $libraryOpen,
+                            ])
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div
+                    id="library-submenu"
+                    data-library-dropdown-menu
+                    @class(['ml-8 mt-1 space-y-1 border-l border-slate-200 dark:border-slate-700 pl-3', 'hidden' => ! $libraryOpen])
+                >
+                    <a
+                        href="{{ route('library.index', ['section' => 'posts']) }}"
+                        @class([
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                            'text-primary bg-primary/10' => request()->routeIs('library.*') && request()->query('section', 'posts') === 'posts',
+                            'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200' => ! request()->routeIs('library.*') || request()->query('section', 'posts') !== 'posts',
+                        ])
+                    >
+                        <i class="fa-solid fa-pen w-4 text-center opacity-60" aria-hidden="true"></i>
+                        <span>Your Posts</span>
+                    </a>
+                    <a
+                        href="{{ route('library.index', ['section' => 'liked']) }}"
+                        @class([
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                            'text-primary bg-primary/10' => request()->routeIs('library.*') && request()->query('section') === 'liked',
+                            'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200' => ! request()->routeIs('library.*') || request()->query('section') !== 'liked',
+                        ])
+                    >
+                        <i class="fa-solid fa-heart w-4 text-center opacity-60" aria-hidden="true"></i>
+                        <span>Liked Posts</span>
+                    </a>
+                    <a
+                        href="{{ route('library.index', ['section' => 'bookmarks']) }}"
+                        @class([
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                            'text-primary bg-primary/10' => request()->routeIs('library.*') && request()->query('section') === 'bookmarks',
+                            'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200' => ! request()->routeIs('library.*') || request()->query('section') !== 'bookmarks',
+                        ])
+                    >
+                        <i class="fa-solid fa-bookmark w-4 text-center opacity-60" aria-hidden="true"></i>
+                        <span>Your Bookmarks</span>
+                    </a>
+                    <a
+                        href="{{ route('library.index', ['section' => 'bookings']) }}"
+                        @class([
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                            'text-primary bg-primary/10' => request()->routeIs('library.*') && request()->query('section') === 'bookings',
+                            'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200' => ! request()->routeIs('library.*') || request()->query('section') !== 'bookings',
+                        ])
+                    >
+                        <i class="fa-solid fa-calendar-check w-4 text-center opacity-60" aria-hidden="true"></i>
+                        <span>Your Bookings</span>
+                    </a>
+                </div>
+            </div>
+        @endauth
     </nav>
 </aside>

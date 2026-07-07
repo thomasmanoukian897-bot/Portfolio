@@ -16,4 +16,6 @@ interface GoogleCalendarService
     public function getBusyPeriods(CarbonInterface $rangeStart, CarbonInterface $rangeEnd): Collection;
 
     public function createEvent(Reservation $reservation): string;
+
+    public function deleteEvent(Reservation $reservation): void;
 }
