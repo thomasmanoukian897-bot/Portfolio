@@ -434,6 +434,49 @@ test('users cannot delete posts they did not create', function () {
     expect(Post::query()->find($post->id))->not->toBeNull();
 });
 
+test('users can delete posts when their email matches the author email on another account', function () {
+    $author = User::factory()->create(['email' => 'author@example.com']);
+    $post = Post::factory()->for($author)->published()->create(['title' => 'Shared Email Post']);
+    $viewer = User::factory()->make([
+        'id' => $author->id + 1000,
+        'email' => 'author@example.com',
+        'google_id' => 'google-123',
+    ]);
+
+    expect($post->isOwnedBy($viewer))->toBeTrue();
+
+    $this->actingAs($viewer)
+        ->delete(route('posts.destroy', $post))
+        ->assertRedirect(route('posts.index'))
+        ->assertSessionHas('status');
+
+    expect(Post::query()->find($post->id))->toBeNull();
+});
+
+test('users see a delete button when their email matches the author email on another account', function () {
+    $author = User::factory()->create(['email' => 'author@example.com']);
+    $post = Post::factory()->for($author)->published()->create(['title' => 'Shared Email Post']);
+    $viewer = User::factory()->make([
+        'id' => $author->id + 1000,
+        'email' => 'author@example.com',
+        'google_id' => 'google-123',
+    ]);
+
+    $this->actingAs($viewer)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('fa-trash', false);
+});
+
+test('post ownership matches author email case insensitively', function () {
+    $author = User::factory()->make(['id' => 10, 'email' => 'Author@Example.com']);
+    $viewer = User::factory()->make(['id' => 20, 'email' => 'author@example.com']);
+    $post = Post::factory()->make(['user_id' => 10]);
+    $post->setRelation('user', $author);
+
+    expect($post->isOwnedBy($viewer))->toBeTrue();
+});
+
 test('admins cannot delete posts from the public site', function () {
     $admin = User::factory()->admin()->create();
     $author = User::factory()->create();

@@ -17,6 +17,6 @@ class CommentPolicy
     {
         return $user->isAdmin()
             || $user->id === $comment->user_id
-            || $user->id === $comment->post->user_id;
+            || $comment->post->isOwnedBy($user);
     }
 }

@@ -125,6 +125,18 @@ class Post extends Model
         return $this->bookmarks()->where('user_id', $user->id)->exists();
     }
 
+    public function isOwnedBy(User $user): bool
+    {
+        if ($user->id === $this->user_id) {
+            return true;
+        }
+
+        $author = $this->user;
+
+        return $author !== null
+            && strcasecmp($author->email, $user->email) === 0;
+    }
+
     public function isPublished(): bool
     {
         return $this->published_at !== null && $this->published_at->lte(now());

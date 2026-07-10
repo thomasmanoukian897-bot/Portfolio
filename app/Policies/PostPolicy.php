@@ -19,7 +19,7 @@ class PostPolicy
 
     public function update(User $user, Post $post): bool
     {
-        return $user->isAdmin() || $user->id === $post->user_id;
+        return $user->isAdmin() || $post->isOwnedBy($user);
     }
 
     /**
@@ -27,7 +27,7 @@ class PostPolicy
      */
     public function delete(User $user, Post $post): bool
     {
-        return $user->id === $post->user_id;
+        return $post->isOwnedBy($user);
     }
 
     /**
