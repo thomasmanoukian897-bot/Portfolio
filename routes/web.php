@@ -12,6 +12,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentVoteController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostBookmarkController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostLikeController;
@@ -74,6 +75,8 @@ Route::middleware('auth')->group(function () {
         ->name('posts.bookmark.toggle');
 
     Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
 

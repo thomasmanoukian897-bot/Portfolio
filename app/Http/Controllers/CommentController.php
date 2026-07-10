@@ -7,6 +7,7 @@ use App\Http\Requests\StoreReplyCommentRequest;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
+use App\Notifications\PostCommentedNotification;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -28,6 +29,10 @@ class CommentController extends Controller
                 'parent_id' => null,
                 'body' => $validated['body'],
             ]);
+
+            if (! $post->user->is($request->user())) {
+                $post->user->notify(new PostCommentedNotification($request->user(), $post, $comment));
+            }
         }
 
         return redirect()
@@ -44,16 +49,21 @@ class CommentController extends Controller
 
         $validated = $request->validated();
 
-        $post->comments()->create([
+        $reply = $post->comments()->create([
             'user_id' => $request->user()->id,
             'parent_id' => $comment->id,
             'body' => $validated['body'],
         ]);
 
+        if (! $post->user->is($request->user())) {
+            $post->user->notify(new PostCommentedNotification($request->user(), $post, $reply));
+        }
+
         return redirect()
             ->to($this->postShowUrl($post, $comment))
             ->withFragment("comment-{$comment->id}")
-            ->with('status', 'Your reply has been posted.');
+            ->with('status', 'Your reply has been posted.')
+            ->with('show_replies_for', $comment->id);
     }
 
     public function destroy(Post $post, Comment $comment): RedirectResponse

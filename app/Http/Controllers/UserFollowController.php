@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserFollow;
+use App\Notifications\UserFollowedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -29,10 +30,22 @@ class UserFollowController extends Controller
                 'follower_id' => $follower->id,
                 'following_id' => $user->id,
             ]);
+
+            $user->notify(new UserFollowedNotification($follower));
+        }
+
+        $status = $existingFollow !== null
+            ? 'You unfollowed '.$user->name.'.'
+            : 'You are now following '.$user->name.'.';
+
+        if ($request->boolean('from_notifications')) {
+            return redirect()
+                ->route('notifications.index')
+                ->with('status', $status);
         }
 
         return redirect()
             ->route('users.show', $user)
-            ->with('status', $existingFollow !== null ? 'You unfollowed '.$user->name.'.' : 'You are now following '.$user->name.'.');
+            ->with('status', $status);
     }
 }

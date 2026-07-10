@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\PostLike;
+use App\Notifications\PostLikedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -31,6 +32,10 @@ class PostLikeController extends Controller
                 'user_id' => $user->id,
             ]);
             $liked = true;
+
+            if (! $post->user->is($user)) {
+                $post->user->notify(new PostLikedNotification($user, $post));
+            }
         }
 
         return response()->json([

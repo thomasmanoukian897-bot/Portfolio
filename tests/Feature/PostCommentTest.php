@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Requests\StoreReplyCommentRequest;
 use App\Models\Comment;
 use App\Models\CommentVote;
 use App\Models\Post;
@@ -182,7 +183,8 @@ test('authenticated users can reply to a comment', function () {
             'body' => 'Thanks for sharing!',
         ])
         ->assertRedirect(route('posts.show', $post)."#comment-{$parentComment->id}")
-        ->assertSessionHas('status');
+        ->assertSessionHas('status')
+        ->assertSessionHas('show_replies_for', $parentComment->id);
 
     $reply = Comment::query()->where('parent_id', $parentComment->id)->first();
 
@@ -194,7 +196,33 @@ test('authenticated users can reply to a comment', function () {
     $this->get(route('posts.show', $post))
         ->assertSuccessful()
         ->assertSee('Thanks for sharing!')
+        ->assertSee('Hide replies')
         ->assertSee('Reply');
+});
+
+test('reply authorization allows string post_id values from the database', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $parentComment = Comment::factory()->for($post)->create();
+    $parentComment->setAttribute('post_id', (string) $post->id);
+
+    $request = StoreReplyCommentRequest::create('/', 'POST', ['body' => 'Thanks!']);
+    $request->setUserResolver(fn () => $user);
+    $request->setRouteResolver(fn () => new class($post, $parentComment)
+    {
+        public function __construct(private Post $post, private Comment $comment) {}
+
+        public function parameter(string $name): Post|Comment|null
+        {
+            return match ($name) {
+                'post' => $this->post,
+                'comment' => $this->comment,
+                default => null,
+            };
+        }
+    });
+
+    expect($request->authorize())->toBeTrue();
 });
 
 test('users cannot reply to a comment on another post', function () {

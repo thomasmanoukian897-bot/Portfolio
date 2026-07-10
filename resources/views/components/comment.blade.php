@@ -128,7 +128,8 @@
 
                 @if ($comment->replies->isNotEmpty())
                     @php
-                        $repliesExpanded = session('reply_to') == $comment->id;
+                        $repliesExpanded = session('show_replies_for') == $comment->id
+                            || session('reply_to') == $comment->id;
                         $repliesCount = $comment->replies->count();
                     @endphp
                     <button
@@ -155,12 +156,16 @@
         ></div>
 
         @if ($canReply && $comment->replies->isNotEmpty())
+            @php
+                $repliesExpanded = session('show_replies_for') == $comment->id
+                    || session('reply_to') == $comment->id;
+            @endphp
             <ul
                 id="comment-replies-{{ $comment->id }}"
                 data-comment-replies-list="{{ $comment->id }}"
                 @class([
                     'mt-6 space-y-6 border-l-2 border-slate-100 pl-4',
-                    'hidden' => session('reply_to') != $comment->id,
+                    'hidden' => ! $repliesExpanded,
                 ])
             >
                 @foreach ($comment->replies as $reply)

@@ -353,6 +353,28 @@
             </div>
 
             <a
+                href="{{ route('notifications.index') }}"
+                @class([
+                    'mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                    'text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80' => request()->routeIs('notifications.*'),
+                    'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! request()->routeIs('notifications.*'),
+                ])
+                @if ($hasUnreadNotifications) aria-label="Notifications, unread" @endif
+            >
+                <span class="relative inline-flex w-5 shrink-0 items-center justify-center">
+                    <i class="fa-solid fa-bell w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+                    @if ($hasUnreadNotifications)
+                        <span
+                            class="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"
+                            data-unread-notification-dot
+                            aria-hidden="true"
+                        ></span>
+                    @endif
+                </span>
+                <span>Notifications</span>
+            </a>
+
+            <a
                 href="{{ route('users.show', auth()->user()) }}"
                 @class([
                     'mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',

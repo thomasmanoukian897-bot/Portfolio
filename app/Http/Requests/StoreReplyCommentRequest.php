@@ -18,9 +18,12 @@ class StoreReplyCommentRequest extends FormRequest
         /** @var Comment $comment */
         $comment = $this->route('comment');
 
-        return $comment->post_id === $post->id
-            && $comment->parent_id === null
-            && ($this->user()?->can('create', [Comment::class, $post]) ?? false);
+        $user = $this->user();
+
+        return $user !== null
+            && (int) $comment->post_id === (int) $post->id
+            && ! $comment->isReply()
+            && $user->can('create', [Comment::class, $post]);
     }
 
     /**
