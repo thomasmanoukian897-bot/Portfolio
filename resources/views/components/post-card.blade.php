@@ -16,6 +16,14 @@
                 </div>
             </div>
         @endif
+
+        @if ($post->hasVideo())
+            <div class="absolute bottom-3 left-3 flex items-center justify-center w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow-md pointer-events-none" aria-hidden="true">
+                <svg class="w-6 h-6 fill-black ml-0.5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+            </div>
+        @endif
     </a>
     <div class="p-6 flex flex-col">
         <div class="flex items-center gap-2 text-xs text-slate-500 mb-4">

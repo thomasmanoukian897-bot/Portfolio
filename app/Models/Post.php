@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CommentVoteType;
 use App\Services\FeaturedImageProcessor;
+use App\Services\FeaturedVideoProcessor;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,7 @@ class Post extends Model
         'excerpt',
         'content',
         'image_path',
+        'video_path',
         'published_at',
     ];
 
@@ -137,6 +139,20 @@ class Post extends Model
         return Storage::disk('public')->url($this->image_path);
     }
 
+    public function hasVideo(): bool
+    {
+        return $this->video_path !== null;
+    }
+
+    public function featuredVideoUrl(): ?string
+    {
+        if ($this->video_path === null) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->video_path);
+    }
+
     public function storeFeaturedImage(UploadedFile $file): string
     {
         $this->deleteFeaturedImage();
@@ -153,10 +169,27 @@ class Post extends Model
         Storage::disk('public')->delete($this->image_path);
     }
 
+    public function storeFeaturedVideo(UploadedFile $file): string
+    {
+        $this->deleteFeaturedVideo();
+
+        return app(FeaturedVideoProcessor::class)->store($file);
+    }
+
+    public function deleteFeaturedVideo(): void
+    {
+        if ($this->video_path === null) {
+            return;
+        }
+
+        Storage::disk('public')->delete($this->video_path);
+    }
+
     protected static function booted(): void
     {
         static::deleting(function (Post $post): void {
             $post->deleteFeaturedImage();
+            $post->deleteFeaturedVideo();
         });
     }
 }

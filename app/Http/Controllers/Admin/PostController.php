@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdatePostRequest;
 use App\Models\Category;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
+use App\Services\FeaturedVideoProcessor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class PostController extends Controller
     {
         $validated = $request->validated();
         $categoryIds = $validated['category_ids'];
-        unset($validated['category_ids'], $validated['image']);
+        unset($validated['category_ids'], $validated['image'], $validated['video']);
 
         $post = Post::query()->create([
             ...$validated,
@@ -59,6 +60,9 @@ class PostController extends Controller
             'slug' => $this->resolveSlug($validated['title'], $validated['slug'] ?? null),
             'image_path' => $request->hasFile('image')
                 ? app(FeaturedImageProcessor::class)->store($request->file('image'))
+                : null,
+            'video_path' => $request->hasFile('video')
+                ? app(FeaturedVideoProcessor::class)->store($request->file('video'))
                 : null,
         ]);
 
@@ -83,13 +87,20 @@ class PostController extends Controller
     {
         $validated = $request->validated();
         $categoryIds = $validated['category_ids'];
-        unset($validated['category_ids'], $validated['image'], $validated['remove_image']);
+        unset($validated['category_ids'], $validated['image'], $validated['video'], $validated['remove_image'], $validated['remove_video']);
 
         if ($request->boolean('remove_image')) {
             $post->deleteFeaturedImage();
             $validated['image_path'] = null;
         } elseif ($request->hasFile('image')) {
             $validated['image_path'] = $post->storeFeaturedImage($request->file('image'));
+        }
+
+        if ($request->boolean('remove_video')) {
+            $post->deleteFeaturedVideo();
+            $validated['video_path'] = null;
+        } elseif ($request->hasFile('video')) {
+            $validated['video_path'] = $post->storeFeaturedVideo($request->file('video'));
         }
 
         $post->update([
@@ -106,7 +117,7 @@ class PostController extends Controller
 
     public function destroy(Post $post): RedirectResponse
     {
-        $this->authorize('delete', $post);
+        $this->authorize('deleteAny', Post::class);
 
         $title = $post->title;
         $post->delete();

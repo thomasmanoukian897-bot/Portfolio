@@ -75,7 +75,18 @@
                 @endif
             </header>
 
-            @if ($post->featuredImageUrl())
+            @if ($post->hasVideo())
+                <div class="mb-10">
+                    <video
+                        controls
+                        @if ($post->featuredImageUrl()) poster="{{ $post->featuredImageUrl() }}" @endif
+                        class="w-full rounded-2xl border border-slate-200 shadow-sm bg-slate-900 max-h-[28rem]"
+                    >
+                        <source src="{{ $post->featuredVideoUrl() }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            @elseif ($post->featuredImageUrl())
                 <div class="mb-10">
                     <img
                         src="{{ $post->featuredImageUrl() }}"

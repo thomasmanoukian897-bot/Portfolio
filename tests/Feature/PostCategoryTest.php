@@ -434,17 +434,40 @@ test('users cannot delete posts they did not create', function () {
     expect(Post::query()->find($post->id))->not->toBeNull();
 });
 
-test('admins can delete posts created by other users', function () {
+test('admins cannot delete posts from the public site', function () {
     $admin = User::factory()->admin()->create();
     $author = User::factory()->create();
     $post = Post::factory()->for($author)->published()->create(['title' => 'Author Post']);
 
     $this->actingAs($admin)
         ->delete(route('posts.destroy', $post))
-        ->assertRedirect(route('posts.index'))
+        ->assertForbidden();
+
+    expect(Post::query()->find($post->id))->not->toBeNull();
+});
+
+test('admins can delete posts from the admin panel', function () {
+    $admin = User::factory()->admin()->create();
+    $author = User::factory()->create();
+    $post = Post::factory()->for($author)->published()->create(['title' => 'Author Post']);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.posts.destroy', $post))
+        ->assertRedirect(route('admin.posts.index'))
         ->assertSessionHas('status');
 
     expect(Post::query()->find($post->id))->toBeNull();
+});
+
+test('admins do not see a delete button on public post pages', function () {
+    $admin = User::factory()->admin()->create();
+    $author = User::factory()->create();
+    $post = Post::factory()->for($author)->published()->create(['title' => 'Author Post']);
+
+    $this->actingAs($admin)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertDontSee('fa-trash', false);
 });
 
 test('guests cannot delete posts', function () {
@@ -454,6 +477,68 @@ test('guests cannot delete posts', function () {
         ->assertRedirect(route('login'));
 
     expect(Post::query()->find($post->id))->not->toBeNull();
+});
+
+test('deleting a post removes its stored video', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+    $video = UploadedFile::fake()->create('demo.mp4', 1024, 'video/mp4');
+
+    $this->actingAs($user)
+        ->post(route('posts.store'), [
+            'title' => 'Deletable Video Post',
+            'content' => '<p>Hello world</p>',
+            'category_ids' => [$category->id],
+            'video' => $video,
+        ]);
+
+    $post = Post::query()->where('slug', 'deletable-video-post')->firstOrFail();
+    $videoPath = $post->video_path;
+
+    Storage::disk('public')->assertExists($videoPath);
+
+    $this->actingAs($user)
+        ->delete(route('posts.destroy', $post))
+        ->assertRedirect(route('posts.index'));
+
+    Storage::disk('public')->assertMissing($videoPath);
+});
+
+test('authenticated users can upload a video when publishing a post', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+    $video = UploadedFile::fake()->create('demo.mp4', 1024, 'video/mp4');
+    $image = UploadedFile::fake()->image('thumbnail.jpg');
+
+    $this->actingAs($user)
+        ->post(route('posts.store'), [
+            'title' => 'Video Post',
+            'content' => '<p>Hello world</p>',
+            'category_ids' => [$category->id],
+            'video' => $video,
+            'image' => $image,
+        ])
+        ->assertRedirect(route('posts.show', 'video-post'));
+
+    $post = Post::query()->where('slug', 'video-post')->first();
+
+    expect($post->video_path)->not->toBeNull();
+    expect($post->image_path)->not->toBeNull();
+    expect($post->hasVideo())->toBeTrue();
+    Storage::disk('public')->assertExists($post->video_path);
+    Storage::disk('public')->assertExists($post->image_path);
+
+    $this->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee($post->featuredVideoUrl(), false);
+
+    $this->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSee('w-6 h-6', false);
 });
 
 test('post authors see a delete button on their posts', function () {

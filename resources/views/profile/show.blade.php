@@ -61,21 +61,25 @@
                         {{ $profileUser->name }}
                     </p>
 
+                    @php
+                        $connectionStatClass = 'cursor-pointer rounded-lg px-2.5 py-1 -mx-2.5 -my-1 text-slate-600 underline underline-offset-2 decoration-slate-400/70 transition-colors hover:bg-slate-100 hover:text-primary hover:decoration-primary active:scale-95 dark:text-slate-400 dark:decoration-slate-500 dark:hover:bg-slate-800 dark:hover:text-blue-400 dark:hover:decoration-blue-400';
+                    @endphp
+
                     <div class="flex items-center justify-center sm:justify-start gap-6 mb-4 text-sm">
-                        <span class="text-slate-600 dark:text-slate-400"><span class="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{{ $profileUser->posts_count }}</span> {{ Str::plural('post', $profileUser->posts_count) }}</span>
+                        <span class="text-slate-600 dark:text-slate-400"><span class="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{{ $profileUser->posts_count }}</span> {{ Str::ucfirst(Str::plural('post', $profileUser->posts_count)) }}</span>
                         <button
                             type="button"
                             data-user-connections-open="followers"
-                            class="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                            class="{{ $connectionStatClass }}"
                         >
-                            <span class="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{{ $profileUser->followers_count }}</span> {{ Str::plural('follower', $profileUser->followers_count) }}
+                            <span class="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{{ $profileUser->followers_count }}</span> {{ Str::ucfirst(Str::plural('follower', $profileUser->followers_count)) }}
                         </button>
                         <button
                             type="button"
                             data-user-connections-open="following"
-                            class="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                            class="{{ $connectionStatClass }}"
                         >
-                            <span class="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{{ $profileUser->following_count }}</span> following
+                            <span class="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{{ $profileUser->following_count }}</span> Following
                         </button>
                     </div>
                 </div>

@@ -101,7 +101,7 @@
                                         Edit
                                     </a>
 
-                                    @can('delete', $post)
+                                    @can('deleteAny', \App\Models\Post::class)
                                         <form method="POST" action="{{ route('admin.posts.destroy', $post) }}" onsubmit="return confirm('Delete this post?')">
                                             @csrf
                                             @method('DELETE')

@@ -9,6 +9,7 @@ use App\Models\Comment;
 use App\Models\CommentVote;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
+use App\Services\FeaturedVideoProcessor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -102,7 +103,7 @@ class PostController extends Controller
     {
         $validated = $request->validated();
         $categoryIds = $validated['category_ids'];
-        unset($validated['category_ids'], $validated['image']);
+        unset($validated['category_ids'], $validated['image'], $validated['video']);
 
         $post = Post::query()->create([
             ...$validated,
@@ -111,6 +112,9 @@ class PostController extends Controller
             'published_at' => now(),
             'image_path' => $request->hasFile('image')
                 ? app(FeaturedImageProcessor::class)->store($request->file('image'))
+                : null,
+            'video_path' => $request->hasFile('video')
+                ? app(FeaturedVideoProcessor::class)->store($request->file('video'))
                 : null,
         ]);
 

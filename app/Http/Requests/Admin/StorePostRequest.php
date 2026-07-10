@@ -35,6 +35,7 @@ class StorePostRequest extends FormRequest
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'video' => ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:51200'],
             'published_at' => ['nullable', 'date'],
             'category_ids' => ['required', 'array', 'min:1'],
             'category_ids.*' => ['integer', Rule::exists('categories', 'id')],

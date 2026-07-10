@@ -37,6 +37,23 @@
 </div>
 
 <div class="space-y-2">
+    <label for="video" class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">
+        Featured Video <span class="text-slate-400 font-normal normal-case">(optional)</span>
+    </label>
+    <input
+        id="video"
+        name="video"
+        type="file"
+        accept="video/mp4,video/webm,video/quicktime"
+        class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-xs transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200 @error('video') border-red-400 focus:ring-red-500 @enderror"
+    />
+    @error('video')
+        <p class="text-sm text-red-600">{{ $message }}</p>
+    @enderror
+    <p class="text-xs text-slate-500">MP4, WebM, or MOV up to 50 MB. Add a featured image above for the thumbnail.</p>
+</div>
+
+<div class="space-y-2">
     <span class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">
         Categories
     </span>
