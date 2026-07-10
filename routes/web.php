@@ -17,7 +17,9 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
-use App\Http\Controllers\SquadsController;
+use App\Http\Controllers\UserConnectionController;
+use App\Http\Controllers\UserFollowController;
+use App\Http\Controllers\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -77,6 +79,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/privacy', [ProfileController::class, 'updatePrivacy'])->name('profile.privacy.update');
+    Route::post('/users/{user}/follow', [UserFollowController::class, 'toggle'])
+        ->middleware('throttle:30,1')
+        ->name('users.follow.toggle');
     Route::post('/profile/password', [ProfileController::class, 'requestPasswordChange'])
         ->middleware('throttle:3,1')
         ->name('profile.password.request');
@@ -86,6 +92,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/posts/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+
+Route::get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
+Route::get('/users/{user}/followers', [UserConnectionController::class, 'followers'])->name('users.followers');
+Route::get('/users/{user}/following', [UserConnectionController::class, 'following'])->name('users.following');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RequestPasswordChangeRequest;
+use App\Http\Requests\UpdateProfilePrivacyRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Requests\VerifyPasswordChangeRequest;
 use App\Mail\PasswordChangeVerificationCode;
@@ -20,7 +21,11 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $user,
             'pendingPasswordChange' => PasswordChangeVerification::findActiveForUser($user) !== null,
-            'activeTab' => request()->string('tab')->toString() === 'password' ? 'password' : 'account',
+            'activeTab' => match (request()->string('tab')->toString()) {
+                'password' => 'password',
+                'settings' => 'settings',
+                default => 'account',
+            },
         ]);
     }
 
@@ -41,6 +46,15 @@ class ProfileController extends Controller
         return redirect()
             ->route('profile.edit')
             ->with('status', 'Your profile has been updated successfully.');
+    }
+
+    public function updatePrivacy(UpdateProfilePrivacyRequest $request): RedirectResponse
+    {
+        $request->user()->update($request->privacySettings());
+
+        return redirect()
+            ->route('profile.edit', ['tab' => 'settings'])
+            ->with('status', 'Your privacy settings have been updated.');
     }
 
     public function requestPasswordChange(RequestPasswordChangeRequest $request): RedirectResponse

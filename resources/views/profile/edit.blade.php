@@ -57,6 +57,16 @@
                     >
                         Change Password
                     </a>
+                    <a
+                        href="{{ route('profile.edit', ['tab' => 'settings']) }}"
+                        @class([
+                            'flex-1 px-6 py-4 text-sm font-semibold text-center transition-colors',
+                            'text-primary border-b-2 border-primary bg-primary/5' => $activeTab === 'settings',
+                            'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100' => $activeTab !== 'settings',
+                        ])
+                    >
+                        Settings
+                    </a>
                 </div>
 
                 @if ($activeTab === 'account')
@@ -116,6 +126,57 @@
                                 Save Changes
                             </button>
                         </div>
+                    </form>
+                @elseif ($activeTab === 'settings')
+                    <form method="POST" action="{{ route('profile.privacy.update') }}" class="p-8 space-y-8">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="space-y-6">
+                            <div>
+                                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Privacy</h2>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">
+                                    Choose whether other users can see your liked posts and bookmarks on your profile.
+                                </p>
+                            </div>
+
+                            <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <input type="hidden" name="likes_public" value="0" />
+                                <input
+                                    type="checkbox"
+                                    name="likes_public"
+                                    value="1"
+                                    @checked(old('likes_public', $user->likes_public))
+                                    class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                />
+                                <span>
+                                    <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Public likes</span>
+                                    <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Allow others to see posts you have liked on your profile.</span>
+                                </span>
+                            </label>
+
+                            <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <input type="hidden" name="bookmarks_public" value="0" />
+                                <input
+                                    type="checkbox"
+                                    name="bookmarks_public"
+                                    value="1"
+                                    @checked(old('bookmarks_public', $user->bookmarks_public))
+                                    class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                />
+                                <span>
+                                    <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Public bookmarks</span>
+                                    <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Allow others to see posts you have saved on your profile.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn-gradient text-white px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            Save Settings
+                        </button>
                     </form>
                 @else
                     <div class="p-8 space-y-8">

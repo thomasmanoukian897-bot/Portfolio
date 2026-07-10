@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\UploadedFile;
@@ -30,6 +31,8 @@ class User extends Authenticatable
         'password',
         'role',
         'avatar_path',
+        'likes_public',
+        'bookmarks_public',
     ];
 
     /**
@@ -60,6 +63,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'likes_public' => 'boolean',
+            'bookmarks_public' => 'boolean',
         ];
     }
 
@@ -119,6 +124,32 @@ class User extends Authenticatable
     public function commentVotes(): HasMany
     {
         return $this->hasMany(CommentVote::class);
+    }
+
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'following_id', 'follower_id')
+            ->withTimestamps();
+    }
+
+    public function following(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'follower_id', 'following_id')
+            ->withTimestamps();
+    }
+
+    public function isFollowedBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->followers()->where('users.id', $user->id)->exists();
+    }
+
+    public function handle(): string
+    {
+        return Str::slug($this->name);
     }
 
     public function avatarUrl(): ?string

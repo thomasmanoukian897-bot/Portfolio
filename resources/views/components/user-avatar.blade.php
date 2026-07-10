@@ -9,6 +9,7 @@
         'nav' => 'w-7 h-7 text-xs',
         'sm' => 'w-8 h-8 text-xs',
         'lg' => 'w-20 h-20 text-2xl',
+        'xl' => 'w-28 h-28 md:w-36 md:h-36 text-4xl md:text-5xl',
         default => 'w-9 h-9 text-sm',
     };
 @endphp

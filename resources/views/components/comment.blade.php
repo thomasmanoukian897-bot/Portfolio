@@ -10,12 +10,19 @@
 @endphp
 
 <li id="comment-{{ $comment->id }}" class="flex gap-4">
-    <x-user-avatar :user="$comment->user" size="sm" />
+    <a href="{{ route('users.show', $comment->user) }}" class="shrink-0 hover:opacity-80 transition-opacity">
+        <x-user-avatar :user="$comment->user" size="sm" />
+    </a>
 
     <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
             <div class="flex flex-wrap items-center gap-2 text-sm">
-                <span class="font-semibold text-slate-900">{{ $comment->user->name }}</span>
+                <a
+                    href="{{ route('users.show', $comment->user) }}"
+                    class="font-semibold text-slate-900 hover:text-primary transition-colors"
+                >
+                    {{ $comment->user->name }}
+                </a>
                 <span class="text-slate-300">&middot;</span>
                 <time datetime="{{ $comment->created_at->toDateString() }}" class="text-slate-500">
                     {{ $comment->created_at->diffForHumans() }}

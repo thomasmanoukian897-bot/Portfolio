@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\UserFollow;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+
+class UserFollowController extends Controller
+{
+    public function toggle(Request $request, User $user): RedirectResponse
+    {
+        $follower = $request->user();
+
+        if ($follower->is($user)) {
+            abort(403);
+        }
+
+        $existingFollow = UserFollow::query()
+            ->where('follower_id', $follower->id)
+            ->where('following_id', $user->id)
+            ->first();
+
+        if ($existingFollow !== null) {
+            $existingFollow->delete();
+        } else {
+            UserFollow::query()->create([
+                'follower_id' => $follower->id,
+                'following_id' => $user->id,
+            ]);
+        }
+
+        return redirect()
+            ->route('users.show', $user)
+            ->with('status', $existingFollow !== null ? 'You unfollowed '.$user->name.'.' : 'You are now following '.$user->name.'.');
+    }
+}

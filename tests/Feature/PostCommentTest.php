@@ -8,6 +8,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+test('post show links author and commenter names to user profiles', function () {
+    $author = User::factory()->create(['name' => 'Article Author']);
+    $commenter = User::factory()->create(['name' => 'Comment Author']);
+    $post = Post::factory()->published()->for($author)->create();
+    Comment::factory()->for($post)->for($commenter)->create(['body' => 'Nice read']);
+
+    $this->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee(route('users.show', $author), false)
+        ->assertSee(route('users.show', $commenter), false);
+});
+
 test('authenticated users can comment on published posts', function () {
     $user = User::factory()->create();
     $post = Post::factory()->published()->create();

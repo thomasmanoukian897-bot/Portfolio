@@ -23,8 +23,13 @@
             <header class="mb-10">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                     <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                        <x-user-avatar :user="$post->user" size="sm" />
-                        <span>{{ $post->user->name }}</span>
+                        <a
+                            href="{{ route('users.show', $post->user) }}"
+                            class="inline-flex items-center gap-2 hover:text-primary transition-colors"
+                        >
+                            <x-user-avatar :user="$post->user" size="sm" />
+                            <span class="font-semibold text-slate-900">{{ $post->user->name }}</span>
+                        </a>
                         <span class="text-slate-300">&middot;</span>
                         <time datetime="{{ $post->published_at->toIso8601String() }}">
                             {{ $post->published_at->format('H:i / d.m.Y') }}
