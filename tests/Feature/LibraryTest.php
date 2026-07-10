@@ -3,6 +3,7 @@
 use App\Models\Post;
 use App\Models\PostBookmark;
 use App\Models\PostLike;
+use App\Models\PostView;
 use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,24 @@ test('authenticated users can view bookmarked posts in the library', function ()
         ->assertDontSee('Unsaved Article');
 });
 
+test('authenticated users can view read posts in the library reading history', function () {
+    $user = User::factory()->create();
+    $readPost = Post::factory()->published()->create(['title' => 'Read Article']);
+    $unreadPost = Post::factory()->published()->create(['title' => 'Unread Article']);
+
+    PostView::query()->create([
+        'post_id' => $readPost->id,
+        'viewer_identifier' => 'user:'.$user->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('library.index', ['section' => 'history']))
+        ->assertSuccessful()
+        ->assertSee('Reading History')
+        ->assertSee('Read Article')
+        ->assertDontSee('Unread Article');
+});
+
 test('authenticated users can view their bookings in the library', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
@@ -88,6 +107,7 @@ test('library sidebar links are visible to authenticated users', function () {
         ->assertSee(route('library.index', ['section' => 'posts']), false)
         ->assertSee(route('library.index', ['section' => 'liked']), false)
         ->assertSee(route('library.index', ['section' => 'bookmarks']), false)
+        ->assertSee(route('library.index', ['section' => 'history']), false)
         ->assertSee(route('library.index', ['section' => 'bookings']), false)
         ->assertSee('fa-book-bookmark', false);
 });
@@ -118,6 +138,12 @@ test('library filter buttons show section counts', function () {
     Post::factory()->published()->count(1)->create()->each(function (Post $post) use ($user): void {
         PostBookmark::factory()->for($post)->for($user)->create();
     });
+    Post::factory()->published()->count(2)->create()->each(function (Post $post) use ($user): void {
+        PostView::query()->create([
+            'post_id' => $post->id,
+            'viewer_identifier' => 'user:'.$user->id,
+        ]);
+    });
     Reservation::factory()->forUser($user)->count(4)->create();
 
     $this->actingAs($user)
@@ -129,6 +155,8 @@ test('library filter buttons show section counts', function () {
         ->assertSee('(3)', false)
         ->assertSee('Your Bookmarks')
         ->assertSee('(1)', false)
+        ->assertSee('Reading History')
+        ->assertSee('(2)', false)
         ->assertSee('Your Bookings')
         ->assertSee('(4)', false);
 });
@@ -140,6 +168,16 @@ test('library shows empty state when user has no posts', function () {
         ->get(route('library.index', ['section' => 'posts']))
         ->assertSuccessful()
         ->assertSee('You have not published any posts yet.');
+});
+
+test('library shows empty state when user has no reading history', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('library.index', ['section' => 'history']))
+        ->assertSuccessful()
+        ->assertSee('You have not read any articles yet.')
+        ->assertSee(route('posts.index'), false);
 });
 
 test('library shows empty state when user has no bookings', function () {

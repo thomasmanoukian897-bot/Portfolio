@@ -32,6 +32,13 @@
             @php
                 $allQuery = array_filter([
                     'search' => $search,
+                    'feed' => $selectedFeed === 'for-you' ? null : $selectedFeed,
+                    'sort' => $selectedSort === 'newest' ? null : $selectedSort,
+                ]);
+
+                $feedQuery = array_filter([
+                    'search' => $search,
+                    'category' => $selectedCategory,
                     'sort' => $selectedSort === 'newest' ? null : $selectedSort,
                 ]);
 
@@ -47,10 +54,46 @@
                 ];
             @endphp
 
+            <div class="mb-6">
+                <div
+                    class="inline-flex items-center rounded-full border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900/50"
+                    role="tablist"
+                    aria-label="Post feed"
+                >
+                    <a
+                        href="{{ route('posts.index', array_merge($feedQuery, ['feed' => null])) }}"
+                        role="tab"
+                        aria-selected="{{ $selectedFeed === 'for-you' ? 'true' : 'false' }}"
+                        @class([
+                            'inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-bold font-mono uppercase tracking-wider transition-colors',
+                            'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900' => $selectedFeed === 'for-you',
+                            'text-slate-600 hover:text-primary dark:text-slate-300' => $selectedFeed !== 'for-you',
+                        ])
+                    >
+                        For You
+                    </a>
+                    <a
+                        href="{{ route('posts.index', array_merge($feedQuery, ['feed' => 'featured'])) }}"
+                        role="tab"
+                        aria-selected="{{ $selectedFeed === 'featured' ? 'true' : 'false' }}"
+                        @class([
+                            'inline-flex items-center justify-center rounded-full px-4 py-2 text-xs font-bold font-mono uppercase tracking-wider transition-colors',
+                            'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900' => $selectedFeed === 'featured',
+                            'text-slate-600 hover:text-primary dark:text-slate-300' => $selectedFeed !== 'featured',
+                        ])
+                    >
+                        Featured
+                    </a>
+                </div>
+            </div>
+
             <div class="mb-8 flex flex-wrap items-center gap-4">
                 <form method="GET" action="{{ route('posts.index') }}" class="max-w-lg">
                     @if ($selectedCategory)
                         <input type="hidden" name="category" value="{{ $selectedCategory }}">
+                    @endif
+                    @if ($selectedFeed !== 'for-you')
+                        <input type="hidden" name="feed" value="{{ $selectedFeed }}">
                     @endif
                     @if ($selectedSort !== 'newest')
                         <input type="hidden" name="sort" value="{{ $selectedSort }}">
@@ -106,6 +149,7 @@
                             <a
                                 href="{{ route('posts.index', array_filter([
                                     'search' => $search,
+                                    'feed' => $selectedFeed === 'for-you' ? null : $selectedFeed,
                                     'category' => $category->slug,
                                     'sort' => $selectedSort === 'newest' ? null : $selectedSort,
                                 ])) }}"
@@ -158,6 +202,9 @@
                         @if ($selectedCategory)
                             <input type="hidden" name="category" value="{{ $selectedCategory }}">
                         @endif
+                        @if ($selectedFeed !== 'for-you')
+                            <input type="hidden" name="feed" value="{{ $selectedFeed }}">
+                        @endif
 
                         <label for="post-sort" class="sr-only">Sort posts</label>
                         <select
@@ -191,6 +238,10 @@
                     <p class="text-slate-500">
                         @if ($search)
                             No posts match your search.
+                        @elseif ($selectedFeed === 'featured' && ! auth()->check())
+                            Sign in to see posts from creators you follow.
+                        @elseif ($selectedFeed === 'featured')
+                            Follow creators to see their posts here.
                         @elseif ($selectedCategory)
                             No posts in this category yet.
                         @else

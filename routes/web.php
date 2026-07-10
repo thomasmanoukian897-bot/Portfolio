@@ -50,6 +50,7 @@ Route::post('/reservations', [ReservationController::class, 'store'])
     ->name('reservations.store');
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+Route::get('/posts/today', [PostController::class, 'today'])->name('posts.today');
 
 Route::middleware('auth')->group(function () {
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');

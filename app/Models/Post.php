@@ -54,6 +54,16 @@ class Post extends Model
             ->where('published_at', '<=', now());
     }
 
+    /**
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopePublishedToday(Builder $query): Builder
+    {
+        return $query->published()
+            ->whereDate('published_at', today());
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -13,7 +13,7 @@
                     Library
                 </h1>
                 <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Your posts, liked articles, saved bookmarks, and session bookings in one place.
+                    Your posts, liked articles, saved bookmarks, reading history, and session bookings in one place.
                 </p>
             </div>
         </div>
@@ -44,6 +44,11 @@
                         'description' => 'Posts you have saved for later.',
                         'icon' => 'fa-bookmark',
                     ],
+                    'history' => [
+                        'label' => 'Reading History',
+                        'description' => 'Articles you have read.',
+                        'icon' => 'fa-clock-rotate-left',
+                    ],
                     'bookings' => [
                         'label' => 'Your Bookings',
                         'description' => 'Sessions you have booked.',
@@ -55,6 +60,7 @@
                     'posts' => 'You have not published any posts yet.',
                     'liked' => 'You have not liked any posts yet.',
                     'bookmarks' => 'You have not bookmarked any posts yet.',
+                    'history' => 'You have not read any articles yet.',
                     'bookings' => 'You have not booked any sessions yet.',
                 ];
             @endphp

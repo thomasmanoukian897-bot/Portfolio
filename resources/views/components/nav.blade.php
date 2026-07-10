@@ -10,22 +10,22 @@
         <i class="fa-solid fa-bars text-base leading-none" aria-hidden="true"></i>
     </button>
 
-    <div class="relative flex justify-between items-center px-4 md:px-16 py-4 max-w-7xl mx-auto">
+    <div class="relative grid grid-cols-[auto_1fr_auto] items-center gap-x-4 md:gap-x-6 px-4 md:px-16 py-4 max-w-7xl mx-auto">
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center shrink-0">
             <a href="{{ route('home') }}" class="flex items-center gap-3 pl-12 md:pl-0">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+            <div class="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                 <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
                 </svg>
             </div>
-                <span class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-display">
+                <span class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-display whitespace-nowrap">
                     Digital Builder
                 </span>
             </a>
         </div>
 
-        <div class="hidden md:flex items-center gap-8">
+        <div class="hidden md:flex items-center justify-center gap-6 lg:gap-8 whitespace-nowrap min-w-0">
             <a @class([
                 'text-sm font-semibold transition-all',
                 'text-primary border-b-2 border-primary pb-1' => request()->routeIs('services'),
@@ -48,7 +48,7 @@
             ]) href="{{ route('reservations.index') }}">Book</a>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="relative z-10 flex items-center justify-end gap-3 shrink-0 pl-4 md:pl-6">
             <a
                 href="{{ route('contact') }}"
                 @class([
@@ -248,6 +248,17 @@
             <i class="fa-solid fa-calendar w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
             <span>Book a Session</span>
         </a>
+        <a
+            href="{{ route('posts.today') }}"
+            @class([
+                'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                'text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80' => request()->routeIs('posts.today'),
+                'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! request()->routeIs('posts.today'),
+            ])
+        >
+            <i class="fa-solid fa-newspaper w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+            <span>All From Today</span>
+        </a>
 
         @auth
             @php
@@ -337,6 +348,17 @@
                     >
                         <i class="fa-solid fa-bookmark w-4 text-center opacity-60" aria-hidden="true"></i>
                         <span>Your Bookmarks</span>
+                    </a>
+                    <a
+                        href="{{ route('library.index', ['section' => 'history']) }}"
+                        @class([
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                            'text-primary bg-primary/10' => request()->routeIs('library.*') && request()->query('section') === 'history',
+                            'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-200' => ! request()->routeIs('library.*') || request()->query('section') !== 'history',
+                        ])
+                    >
+                        <i class="fa-solid fa-clock-rotate-left w-4 text-center opacity-60" aria-hidden="true"></i>
+                        <span>Reading History</span>
                     </a>
                     <a
                         href="{{ route('library.index', ['section' => 'bookings']) }}"

@@ -13,7 +13,7 @@ class LibraryController extends Controller
     {
         $section = $request->query('section', 'posts');
 
-        $allowedSections = ['posts', 'liked', 'bookmarks', 'bookings'];
+        $allowedSections = ['posts', 'liked', 'bookmarks', 'history', 'bookings'];
 
         if (! in_array($section, $allowedSections, true)) {
             $section = 'posts';
@@ -49,6 +49,12 @@ class LibraryController extends Controller
                 ->where('post_bookmarks.user_id', $user->id)
                 ->select('posts.*')
                 ->orderByDesc('post_bookmarks.created_at'),
+            'history' => Post::query()
+                ->published()
+                ->join('post_views', 'posts.id', '=', 'post_views.post_id')
+                ->where('post_views.viewer_identifier', 'user:'.$user->id)
+                ->select('posts.*')
+                ->orderByDesc('post_views.created_at'),
             default => $user->posts()->latest('created_at'),
         };
 
@@ -78,6 +84,11 @@ class LibraryController extends Controller
                 ->published()
                 ->join('post_bookmarks', 'posts.id', '=', 'post_bookmarks.post_id')
                 ->where('post_bookmarks.user_id', $user->id)
+                ->count(),
+            'history' => Post::query()
+                ->published()
+                ->join('post_views', 'posts.id', '=', 'post_views.post_id')
+                ->where('post_views.viewer_identifier', 'user:'.$user->id)
                 ->count(),
             'bookings' => $user->reservations()->count(),
         ];

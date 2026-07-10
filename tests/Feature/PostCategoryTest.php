@@ -5,6 +5,7 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Models\PostLike;
 use App\Models\User;
+use App\Models\UserFollow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -104,6 +105,56 @@ test('admin post edit form includes saved content for the wysiwyg editor', funct
         ->assertSuccessful()
         ->assertSee('data-wysiwyg-input', false)
         ->assertSee(e($content), false);
+});
+
+test('posts index includes feed filter tabs above search', function () {
+    $user = User::factory()->create();
+
+    Post::factory()->for($user)->published()->create(['title' => 'Feed Filter Post']);
+
+    $this->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSee('For You')
+        ->assertSee('Featured')
+        ->assertSee('aria-label="Post feed"', false)
+        ->assertSee('role="tablist"', false);
+});
+
+test('posts index featured feed shows posts from followed users only', function () {
+    $viewer = User::factory()->create();
+    $followedAuthor = User::factory()->create();
+    $otherAuthor = User::factory()->create();
+
+    UserFollow::query()->create([
+        'follower_id' => $viewer->id,
+        'following_id' => $followedAuthor->id,
+    ]);
+
+    Post::factory()->for($followedAuthor)->published()->create(['title' => 'Followed Author Post']);
+    Post::factory()->for($otherAuthor)->published()->create(['title' => 'Other Author Post']);
+
+    $this->actingAs($viewer)
+        ->get(route('posts.index', ['feed' => 'featured']))
+        ->assertSuccessful()
+        ->assertSee('Followed Author Post')
+        ->assertDontSee('Other Author Post');
+
+    $this->actingAs($viewer)
+        ->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSee('Followed Author Post')
+        ->assertSee('Other Author Post');
+});
+
+test('guests see empty featured feed with sign in message', function () {
+    $author = User::factory()->create();
+
+    Post::factory()->for($author)->published()->create(['title' => 'Guest Hidden Post']);
+
+    $this->get(route('posts.index', ['feed' => 'featured']))
+        ->assertSuccessful()
+        ->assertDontSee('Guest Hidden Post')
+        ->assertSee('Sign in to see posts from creators you follow.');
 });
 
 test('posts index can be searched by title or excerpt', function () {
@@ -636,4 +687,62 @@ test('post authors see a delete button on their posts', function () {
         ->get(route('posts.show', $post))
         ->assertSuccessful()
         ->assertDontSee('fa-trash', false);
+});
+
+test('mobile sidebar includes all from today link', function () {
+    $this->get(route('home'))
+        ->assertSuccessful()
+        ->assertSee('id="mobile-drawer-menu"', false)
+        ->assertSee('All From Today')
+        ->assertSee(route('posts.today'), false);
+});
+
+test('posts today page includes layout view toggle controls', function () {
+    $user = User::factory()->create();
+
+    Post::factory()->for($user)->published()->create(['title' => 'Today Toggle Post']);
+
+    $this->get(route('posts.today'))
+        ->assertSuccessful()
+        ->assertSee('id="posts-feed"', false)
+        ->assertSee('data-posts-view="grid"', false)
+        ->assertSee('data-posts-view-toggle="grid"', false)
+        ->assertSee('data-posts-view-toggle="list"', false);
+});
+
+test('posts today page shows only posts published today', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->create(['name' => 'Development', 'slug' => 'development']);
+
+    $todayPost = Post::factory()->for($user)->published()->create([
+        'title' => 'Today Post',
+        'published_at' => now()->setTime(14, 54),
+    ]);
+    $todayPost->categories()->attach($category);
+
+    $yesterdayPost = Post::factory()->for($user)->published()->create([
+        'title' => 'Yesterday Post',
+        'published_at' => now()->subDay()->setTime(10, 0),
+    ]);
+
+    $this->get(route('posts.today'))
+        ->assertSuccessful()
+        ->assertSee('All From Today')
+        ->assertSee('Today Post')
+        ->assertSee('14:54')
+        ->assertSee('Development')
+        ->assertDontSee('Yesterday Post');
+});
+
+test('posts today page shows empty state when no posts were published today', function () {
+    $user = User::factory()->create();
+
+    Post::factory()->for($user)->published()->create([
+        'title' => 'Older Post',
+        'published_at' => now()->subDays(3),
+    ]);
+
+    $this->get(route('posts.today'))
+        ->assertSuccessful()
+        ->assertSee('No posts published today yet');
 });

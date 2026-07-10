@@ -24,6 +24,16 @@ class PostController extends Controller
         $categorySlug = $request->string('category')->toString() ?: null;
         $search = $request->string('search')->trim()->toString() ?: null;
         $sort = $request->query('sort', 'newest');
+        $feed = $request->query('feed', 'for-you');
+
+        $allowedFeeds = [
+            'for-you',
+            'featured',
+        ];
+
+        if (! in_array($feed, $allowedFeeds, true)) {
+            $feed = 'for-you';
+        }
 
         $allowedSorts = [
             'newest',
@@ -77,6 +87,12 @@ class PostController extends Controller
             });
         }
 
+        if ($feed === 'featured') {
+            $followingIds = $request->user()?->following()->pluck('users.id') ?? collect();
+
+            $postsQuery->whereIn('user_id', $followingIds);
+        }
+
         $posts = $postsQuery
             ->paginate(9)
             ->withQueryString();
@@ -87,7 +103,22 @@ class PostController extends Controller
             'totalPostsCount' => $totalPostsCount,
             'selectedCategory' => $categorySlug,
             'selectedSort' => $sort,
+            'selectedFeed' => $feed,
             'search' => $search,
+        ]);
+    }
+
+    public function today(): View
+    {
+        $posts = Post::query()
+            ->publishedToday()
+            ->with(['user', 'categories'])
+            ->withCount(['likes', 'comments'])
+            ->latest('published_at')
+            ->paginate(30);
+
+        return view('posts.today', [
+            'posts' => $posts,
         ]);
     }
 
