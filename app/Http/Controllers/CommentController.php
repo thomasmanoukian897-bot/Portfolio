@@ -8,11 +8,14 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\PostCommentedNotification;
+use App\Services\MentionService;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CommentController extends Controller
 {
+    public function __construct(private MentionService $mentionService) {}
+
     public function store(StoreCommentRequest $request, Post $post): RedirectResponse
     {
         if (! $post->isPublished()) {
@@ -33,6 +36,8 @@ class CommentController extends Controller
             if (! $post->user->is($request->user())) {
                 $post->user->notify(new PostCommentedNotification($request->user(), $post, $comment));
             }
+
+            $this->mentionService->syncAndNotify($comment, $request->user(), $post);
         }
 
         return redirect()
@@ -58,6 +63,8 @@ class CommentController extends Controller
         if (! $post->user->is($request->user())) {
             $post->user->notify(new PostCommentedNotification($request->user(), $post, $reply));
         }
+
+        $this->mentionService->syncAndNotify($reply, $request->user(), $post);
 
         return redirect()
             ->to($this->postShowUrl($post, $comment))

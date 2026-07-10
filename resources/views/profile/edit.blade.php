@@ -102,6 +102,24 @@
                         </div>
 
                         <div class="space-y-2">
+                            <label for="handle" class="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest font-mono">
+                                Handle
+                            </label>
+                            <input
+                                id="handle"
+                                name="handle"
+                                type="text"
+                                value="{{ old('handle', $user->handle) }}"
+                                required
+                                class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm text-slate-800 dark:text-slate-100 shadow-xs transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 @error('handle') border-red-400 focus:ring-red-500 @enderror"
+                            />
+                            @error('handle')
+                                <p class="text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Lowercase letters, numbers, and hyphens only. Shown on your public profile.</p>
+                        </div>
+
+                        <div class="space-y-2">
                             <label for="avatar" class="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest font-mono">
                                 Profile Picture
                             </label>

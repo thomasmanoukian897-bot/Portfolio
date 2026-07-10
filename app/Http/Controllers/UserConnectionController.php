@@ -36,7 +36,7 @@ class UserConnectionController extends Controller
     private function connectionUsers($relation, string $search, ?User $viewer): array
     {
         $query = $relation
-            ->select('users.id', 'users.name', 'users.avatar_path')
+            ->select('users.id', 'users.name', 'users.handle', 'users.avatar_path')
             ->orderBy('users.name');
 
         if ($search !== '') {
@@ -49,7 +49,7 @@ class UserConnectionController extends Controller
             ->map(fn (User $connectionUser): array => [
                 'id' => $connectionUser->id,
                 'name' => $connectionUser->name,
-                'handle' => $connectionUser->handle(),
+                'handle' => $connectionUser->handle,
                 'avatar_url' => $connectionUser->avatarUrl(),
                 'avatar_initial' => $connectionUser->avatarInitial(),
                 'profile_url' => route('users.show', $connectionUser),

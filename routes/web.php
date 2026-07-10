@@ -21,6 +21,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\UserConnectionController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\UserSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -77,6 +78,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/users/search', UserSearchController::class)
+        ->middleware('throttle:60,1')
+        ->name('users.search');
 
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])->name('reservations.destroy');
 

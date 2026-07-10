@@ -30,7 +30,7 @@ class PostLikedNotification extends Notification
             'type' => 'post_liked',
             'actor_id' => $this->liker->id,
             'actor_name' => $this->liker->name,
-            'actor_handle' => $this->liker->handle(),
+            'actor_handle' => $this->liker->handle,
             'actor_avatar_url' => $this->liker->avatarUrl(),
             'post_id' => $this->post->id,
             'post_slug' => $this->post->slug,

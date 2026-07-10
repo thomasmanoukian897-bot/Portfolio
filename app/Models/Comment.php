@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Services\MentionParser;
 use Database\Factories\CommentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comment extends Model
@@ -63,5 +65,20 @@ class Comment extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(CommentVote::class);
+    }
+
+    public function mentionedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    public function formattedBody(): string
+    {
+        $parser = app(MentionParser::class);
+        $users = $this->relationLoaded('mentionedUsers')
+            ? $this->mentionedUsers
+            : User::query()->whereIn('handle', $parser->extractHandles($this->body))->get();
+
+        return $parser->render($this->body, $users);
     }
 }

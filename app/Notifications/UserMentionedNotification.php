@@ -9,7 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
-class PostCommentedNotification extends Notification
+class UserMentionedNotification extends Notification
 {
     use Queueable;
 
@@ -29,7 +29,7 @@ class PostCommentedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'type' => 'post_commented',
+            'type' => 'user_mentioned',
             'actor_id' => $this->commenter->id,
             'actor_name' => $this->commenter->name,
             'actor_handle' => $this->commenter->handle,

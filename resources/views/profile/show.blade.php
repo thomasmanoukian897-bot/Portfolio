@@ -19,7 +19,7 @@
                 <div class="flex-1 w-full text-center sm:text-left">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
                         <h1 class="text-xl md:text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                            {{ $profileUser->handle() }}
+                            {{ $profileUser->handle }}
                         </h1>
 
                         <div class="flex items-center justify-center sm:justify-start gap-2">

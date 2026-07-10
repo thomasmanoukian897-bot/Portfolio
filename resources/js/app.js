@@ -6,6 +6,7 @@ import './mobile-drawer';
 import './library-dropdown';
 import './user-connections-modal';
 import './wysiwyg-editor';
+import { initMentionAutocomplete, initMentionInputs } from './mention-autocomplete';
 
 const templates = JSON.parse(document.getElementById('exporter-templates-data')?.textContent ?? '[]');
 
@@ -234,8 +235,9 @@ function openReplyForm(button, initialBody = '') {
                     name="body"
                     rows="3"
                     required
-                    placeholder="Replying to ${authorName}"
+                    placeholder="Replying to ${authorName}. Use @ to mention someone."
                     data-comment-reply-input
+                    data-mention-input
                     class="w-full resize-none border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0"
                 ></textarea>
                 <div class="mt-3 flex items-center justify-end gap-3">
@@ -260,6 +262,7 @@ function openReplyForm(button, initialBody = '') {
     `;
 
     const textarea = slot.querySelector('[data-comment-reply-input]');
+    const mentionSearchUrl = commentsSection?.dataset.usersSearchUrl ?? null;
 
     if (textarea) {
         textarea.value = initialBody;
@@ -267,6 +270,7 @@ function openReplyForm(button, initialBody = '') {
         textarea.addEventListener('input', () => {
             setReplySubmitState(textarea);
         });
+        initMentionAutocomplete(textarea, mentionSearchUrl);
         textarea.focus();
     }
 
@@ -563,3 +567,5 @@ document.addEventListener('keydown', (event) => {
 
 setSelectedTemplate(selectedId);
 setActiveTab(activeTab);
+
+initMentionInputs(commentsSection?.dataset.usersSearchUrl ?? null);

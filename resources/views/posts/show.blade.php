@@ -171,6 +171,7 @@
                 class="mt-16 pt-12 border-t border-slate-200"
                 data-reply-to="{{ session('reply_to') }}"
                 data-reply-body="{{ session('reply_to') ? old('body') : '' }}"
+                @auth data-users-search-url="{{ route('users.search') }}" @endauth
             >
                 <h2 class="text-2xl font-bold text-slate-900 font-display tracking-tight mb-8">
                     Comments
@@ -194,7 +195,8 @@
                             name="body"
                             rows="4"
                             required
-                            placeholder="Share your thoughts..."
+                            placeholder="Share your thoughts... Use @ to mention someone"
+                            data-mention-input
                             class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors @error('body') border-red-300 focus:border-red-400 focus:ring-red-200 @enderror"
                         >{{ session('reply_to') ? '' : old('body') }}</textarea>
 

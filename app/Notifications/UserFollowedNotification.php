@@ -29,7 +29,7 @@ class UserFollowedNotification extends Notification
             'type' => 'follow',
             'actor_id' => $this->follower->id,
             'actor_name' => $this->follower->name,
-            'actor_handle' => $this->follower->handle(),
+            'actor_handle' => $this->follower->handle,
             'actor_avatar_url' => $this->follower->avatarUrl(),
         ];
     }

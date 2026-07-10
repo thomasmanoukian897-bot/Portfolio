@@ -26,6 +26,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'handle',
         'email',
         'google_id',
         'password',
@@ -147,9 +148,23 @@ class User extends Authenticatable
         return $this->followers()->where('users.id', $user->id)->exists();
     }
 
-    public function handle(): string
+    public static function generateUniqueHandle(string $name): string
     {
-        return Str::slug($this->name);
+        $base = Str::slug($name);
+
+        if ($base === '') {
+            $base = 'user';
+        }
+
+        $handle = $base;
+        $counter = 1;
+
+        while (static::query()->where('handle', $handle)->exists()) {
+            $handle = $base.'-'.$counter;
+            $counter++;
+        }
+
+        return $handle;
     }
 
     public function avatarUrl(): ?string
@@ -184,6 +199,14 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        static::creating(function (User $user): void {
+            if (filled($user->handle)) {
+                return;
+            }
+
+            $user->handle = static::generateUniqueHandle($user->name);
+        });
+
         static::deleting(function (User $user): void {
             $user->deleteAvatar();
         });

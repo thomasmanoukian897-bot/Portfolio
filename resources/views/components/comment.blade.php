@@ -48,7 +48,7 @@
             @endcan
         </div>
 
-        <p class="text-slate-700 whitespace-pre-wrap">{{ $comment->body }}</p>
+        <p class="text-slate-700 whitespace-pre-wrap">{!! $comment->formattedBody() !!}</p>
 
         <div class="mt-2 flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2" data-comment-vote-group>

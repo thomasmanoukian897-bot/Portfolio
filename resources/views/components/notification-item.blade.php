@@ -12,6 +12,7 @@
         'follow' => 'started following you',
         'post_liked' => 'liked your post',
         'post_commented' => 'commented on your post:',
+        'user_mentioned' => 'mentioned you in a comment:',
         default => 'sent you a notification',
     };
 @endphp
@@ -40,7 +41,7 @@
             <span class="text-slate-400 dark:text-slate-500">{{ ' '.$timestamp }}</span>
         </p>
 
-        @if (($data['type'] ?? null) === 'post_commented' && ! empty($data['comment_body']))
+        @if (in_array($data['type'] ?? null, ['post_commented', 'user_mentioned'], true) && ! empty($data['comment_body']))
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
                 {{ $data['comment_body'] }}
             </p>
@@ -59,7 +60,7 @@
                     {{ $isFollowing ? 'Following' : 'Follow Back' }}
                 </button>
             </form>
-        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented'], true) && ! empty($data['post_image_url']))
+        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented', 'user_mentioned'], true) && ! empty($data['post_image_url']))
             <a href="{{ route('posts.show', $data['post_slug']) }}" class="block">
                 <img
                     src="{{ $data['post_image_url'] }}"
@@ -67,7 +68,7 @@
                     class="w-11 h-11 rounded object-cover"
                 />
             </a>
-        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented'], true))
+        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented', 'user_mentioned'], true))
             <a
                 href="{{ route('posts.show', $data['post_slug']) }}"
                 class="inline-flex items-center justify-center w-11 h-11 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"

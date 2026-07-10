@@ -24,7 +24,8 @@ test('authenticated users can view their profile page', function () {
         ->assertSuccessful()
         ->assertSee('Profile')
         ->assertSee('Jane Doe')
-        ->assertSee('Display Name');
+        ->assertSee('Display Name')
+        ->assertSee('Handle');
 });
 
 test('authenticated users can update their display name', function () {
@@ -33,6 +34,7 @@ test('authenticated users can update their display name', function () {
     $this->actingAs($user)
         ->put(route('profile.update'), [
             'name' => 'New Display Name',
+            'handle' => $user->handle,
         ])
         ->assertRedirect(route('profile.edit'))
         ->assertSessionHas('status');
@@ -48,6 +50,7 @@ test('authenticated users can upload an avatar', function () {
     $this->actingAs($user)
         ->put(route('profile.update'), [
             'name' => $user->name,
+            'handle' => $user->handle,
             'avatar' => UploadedFile::fake()->image('avatar.jpg'),
         ])
         ->assertRedirect(route('profile.edit'));
@@ -69,6 +72,7 @@ test('replacing an avatar deletes the old file', function () {
     $this->actingAs($user)
         ->put(route('profile.update'), [
             'name' => $user->name,
+            'handle' => $user->handle,
             'avatar' => UploadedFile::fake()->image('new.jpg'),
         ])
         ->assertRedirect(route('profile.edit'));
@@ -83,8 +87,46 @@ test('profile update requires a valid display name', function () {
     $this->actingAs($user)
         ->put(route('profile.update'), [
             'name' => '',
+            'handle' => $user->handle,
         ])
         ->assertSessionHasErrors('name');
+});
+
+test('authenticated users can update their handle', function () {
+    $user = User::factory()->create(['name' => 'Jane Doe']);
+
+    $this->actingAs($user)
+        ->put(route('profile.update'), [
+            'name' => 'Jane Doe',
+            'handle' => 'jane-writes',
+        ])
+        ->assertRedirect(route('profile.edit'))
+        ->assertSessionHas('status');
+
+    expect($user->fresh()->handle)->toBe('jane-writes');
+});
+
+test('profile update requires a unique handle', function () {
+    $user = User::factory()->create(['name' => 'Jane Doe']);
+    User::factory()->create(['name' => 'Other User', 'handle' => 'taken-handle']);
+
+    $this->actingAs($user)
+        ->put(route('profile.update'), [
+            'name' => 'Jane Doe',
+            'handle' => 'taken-handle',
+        ])
+        ->assertSessionHasErrors('handle');
+});
+
+test('profile update requires a valid handle format', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->put(route('profile.update'), [
+            'name' => $user->name,
+            'handle' => '!!!',
+        ])
+        ->assertSessionHasErrors('handle');
 });
 
 test('navigation shows profile dropdown for authenticated users', function () {

@@ -149,8 +149,9 @@ class PostController extends Controller
         $comments = $post->rootComments()
             ->with([
                 'user',
+                'mentionedUsers',
                 'replies' => fn ($repliesQuery) => $repliesQuery
-                    ->with('user')
+                    ->with(['user', 'mentionedUsers'])
                     ->withCount([
                         'votes as upvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Up),
                         'votes as downvotes_count' => fn ($votesQuery) => $votesQuery->where('type', CommentVoteType::Down),
