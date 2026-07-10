@@ -459,7 +459,7 @@ test('admins can delete posts from the admin panel', function () {
     expect(Post::query()->find($post->id))->toBeNull();
 });
 
-test('admins do not see a delete button on public post pages', function () {
+test('admins do not see a delete button on public post pages for other users posts', function () {
     $admin = User::factory()->admin()->create();
     $author = User::factory()->create();
     $post = Post::factory()->for($author)->published()->create(['title' => 'Author Post']);
@@ -468,6 +468,28 @@ test('admins do not see a delete button on public post pages', function () {
         ->get(route('posts.show', $post))
         ->assertSuccessful()
         ->assertDontSee('fa-trash', false);
+});
+
+test('admins can delete their own posts from the public site', function () {
+    $admin = User::factory()->admin()->create();
+    $post = Post::factory()->for($admin)->published()->create(['title' => 'Admin Post']);
+
+    $this->actingAs($admin)
+        ->delete(route('posts.destroy', $post))
+        ->assertRedirect(route('posts.index'))
+        ->assertSessionHas('status');
+
+    expect(Post::query()->find($post->id))->toBeNull();
+});
+
+test('admins see a delete button on their own public post pages', function () {
+    $admin = User::factory()->admin()->create();
+    $post = Post::factory()->for($admin)->published()->create(['title' => 'Admin Post']);
+
+    $this->actingAs($admin)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('fa-trash', false);
 });
 
 test('guests cannot delete posts', function () {

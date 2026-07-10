@@ -22,11 +22,17 @@ class PostPolicy
         return $user->isAdmin() || $user->id === $post->user_id;
     }
 
+    /**
+     * Delete a post from the public article page (authors only, including admins on their own posts).
+     */
     public function delete(User $user, Post $post): bool
     {
         return $user->id === $post->user_id;
     }
 
+    /**
+     * Delete any post from the admin panel (admins only).
+     */
     public function deleteAny(User $user): bool
     {
         return $user->isAdmin();
