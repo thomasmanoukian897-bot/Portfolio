@@ -13,8 +13,12 @@
         'post_liked' => 'liked your post',
         'post_commented' => 'commented on your post:',
         'user_mentioned' => 'mentioned you in a comment:',
+        'post_published' => 'published a new post',
         default => 'sent you a notification',
     };
+    $postUrl = ! empty($data['post_slug'])
+        ? route('posts.show', $data['post_slug']).(! empty($data['comment_id']) ? '#comment-'.$data['comment_id'] : '')
+        : null;
 @endphp
 
 <div class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -60,17 +64,17 @@
                     {{ $isFollowing ? 'Following' : 'Follow Back' }}
                 </button>
             </form>
-        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented', 'user_mentioned'], true) && ! empty($data['post_image_url']))
-            <a href="{{ route('posts.show', $data['post_slug']) }}" class="block">
+        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented', 'user_mentioned', 'post_published'], true) && ! empty($data['post_image_url']))
+            <a href="{{ $postUrl }}" class="block">
                 <img
                     src="{{ $data['post_image_url'] }}"
                     alt="{{ $data['post_title'] ?? 'Post' }}"
                     class="w-11 h-11 rounded object-cover"
                 />
             </a>
-        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented', 'user_mentioned'], true))
+        @elseif (in_array($data['type'] ?? null, ['post_liked', 'post_commented', 'user_mentioned', 'post_published'], true))
             <a
-                href="{{ route('posts.show', $data['post_slug']) }}"
+                href="{{ $postUrl }}"
                 class="inline-flex items-center justify-center w-11 h-11 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
             >
                 <i class="fa-solid fa-file-lines text-sm" aria-hidden="true"></i>

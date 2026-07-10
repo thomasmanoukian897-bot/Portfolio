@@ -148,6 +148,27 @@ class User extends Authenticatable
         return $this->followers()->where('users.id', $user->id)->exists();
     }
 
+    public function postSubscribers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_post_subscriptions', 'subscribed_to_id', 'subscriber_id')
+            ->withTimestamps();
+    }
+
+    public function postSubscriptions(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_post_subscriptions', 'subscriber_id', 'subscribed_to_id')
+            ->withTimestamps();
+    }
+
+    public function isSubscribedToPostsBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->postSubscribers()->where('users.id', $user->id)->exists();
+    }
+
     public static function generateUniqueHandle(string $name): string
     {
         $base = Str::slug($name);

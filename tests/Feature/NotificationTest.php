@@ -1,11 +1,14 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\UserFollow;
+use App\Models\UserPostSubscription;
 use App\Notifications\PostCommentedNotification;
 use App\Notifications\PostLikedNotification;
 use App\Notifications\UserFollowedNotification;
+use App\Notifications\UserPostedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 
@@ -87,6 +90,31 @@ test('commenting on a post creates a notification for the post author', function
         ->assertRedirect();
 
     Notification::assertSentTo($author, PostCommentedNotification::class);
+});
+
+test('mentioning a user in a comment creates a notification in the notifications tab', function () {
+    $author = User::factory()->create();
+    $commenter = User::factory()->create();
+    $mentioned = User::factory()->create(['name' => 'Tagged User', 'handle' => 'tagged-user']);
+    $post = Post::factory()->published()->for($author)->create();
+
+    $this->actingAs($commenter)
+        ->post(route('posts.comments.store', $post), [
+            'body' => 'Hey @tagged-user check this out',
+        ])
+        ->assertRedirect();
+
+    $notification = $mentioned->fresh()->notifications->first();
+
+    expect($notification)->not->toBeNull();
+    expect($notification->data['type'])->toBe('user_mentioned');
+
+    $this->actingAs($mentioned)
+        ->get(route('notifications.index'))
+        ->assertSuccessful()
+        ->assertSee('tagged-user')
+        ->assertSee('mentioned you in a comment:')
+        ->assertSee('Hey @tagged-user check this out');
 });
 
 test('replying to a comment creates a notification for the post author', function () {
@@ -327,4 +355,110 @@ test('unfollowing from notifications shows follow back again', function () {
         ->assertSuccessful()
         ->assertSee('Follow Back')
         ->assertDontSee('>Following<', false);
+});
+
+test('subscribing to post notifications toggles subscription', function () {
+    $subscriber = User::factory()->create();
+    $author = User::factory()->create(['name' => 'Post Author']);
+
+    UserFollow::query()->create([
+        'follower_id' => $subscriber->id,
+        'following_id' => $author->id,
+    ]);
+
+    $this->actingAs($subscriber)
+        ->post(route('users.post-subscription.toggle', $author))
+        ->assertRedirect(route('users.show', $author))
+        ->assertSessionHas('status');
+
+    expect(UserPostSubscription::query()->count())->toBe(1);
+
+    $this->actingAs($subscriber)
+        ->post(route('users.post-subscription.toggle', $author))
+        ->assertRedirect(route('users.show', $author));
+
+    expect(UserPostSubscription::query()->count())->toBe(0);
+});
+
+test('users cannot subscribe to post notifications without following', function () {
+    $subscriber = User::factory()->create();
+    $author = User::factory()->create();
+
+    $this->actingAs($subscriber)
+        ->post(route('users.post-subscription.toggle', $author))
+        ->assertForbidden();
+
+    expect(UserPostSubscription::query()->count())->toBe(0);
+});
+
+test('unfollowing removes post notification subscription', function () {
+    $follower = User::factory()->create();
+    $followed = User::factory()->create();
+
+    UserFollow::query()->create([
+        'follower_id' => $follower->id,
+        'following_id' => $followed->id,
+    ]);
+
+    UserPostSubscription::query()->create([
+        'subscriber_id' => $follower->id,
+        'subscribed_to_id' => $followed->id,
+    ]);
+
+    $this->actingAs($follower)
+        ->post(route('users.follow.toggle', $followed))
+        ->assertRedirect(route('users.show', $followed));
+
+    expect(UserPostSubscription::query()->count())->toBe(0);
+});
+
+test('users cannot subscribe to their own posts', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('users.post-subscription.toggle', $user))
+        ->assertForbidden();
+});
+
+test('publishing a post notifies subscribers', function () {
+    Notification::fake();
+
+    $author = User::factory()->create();
+    $subscriber = User::factory()->create();
+    $nonSubscriber = User::factory()->create();
+    $category = Category::factory()->create();
+
+    UserPostSubscription::query()->create([
+        'subscriber_id' => $subscriber->id,
+        'subscribed_to_id' => $author->id,
+    ]);
+
+    $this->actingAs($author)
+        ->post(route('posts.store'), [
+            'title' => 'New Story Post',
+            'content' => '<p>Hello subscribers</p>',
+            'category_ids' => [$category->id],
+        ])
+        ->assertRedirect();
+
+    Notification::assertSentTo($subscriber, UserPostedNotification::class);
+    Notification::assertNotSentTo($nonSubscriber, UserPostedNotification::class);
+});
+
+test('notifications page displays new post notifications from subscribed users', function () {
+    $subscriber = User::factory()->create();
+    $author = User::factory()->create(['name' => 'Story Author', 'handle' => 'story-author']);
+    $post = Post::factory()->published()->for($author)->create([
+        'title' => 'Fresh Story',
+        'image_path' => 'posts/test-image.jpg',
+    ]);
+
+    $subscriber->notify(new UserPostedNotification($author, $post));
+
+    $this->actingAs($subscriber)
+        ->get(route('notifications.index'))
+        ->assertSuccessful()
+        ->assertSee('story-author')
+        ->assertSee('published a new post')
+        ->assertSee($post->featuredImageUrl(), false);
 });

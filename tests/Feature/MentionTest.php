@@ -110,7 +110,7 @@ test('mentioning yourself does not send a notification', function () {
     Notification::assertNothingSent();
 });
 
-test('mentioning the post author does not send a duplicate mention notification', function () {
+test('mentioning the post author sends a mention notification instead of a comment notification', function () {
     Notification::fake();
 
     $author = User::factory()->create(['handle' => 'post-author']);
@@ -123,8 +123,8 @@ test('mentioning the post author does not send a duplicate mention notification'
         ])
         ->assertRedirect();
 
-    Notification::assertSentTo($author, PostCommentedNotification::class);
-    Notification::assertNotSentTo($author, UserMentionedNotification::class);
+    Notification::assertSentTo($author, UserMentionedNotification::class);
+    Notification::assertNotSentTo($author, PostCommentedNotification::class);
 });
 
 test('replying with a mention notifies the mentioned user', function () {

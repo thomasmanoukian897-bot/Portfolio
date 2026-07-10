@@ -8,13 +8,17 @@ use App\Models\Comment;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\PostCommentedNotification;
+use App\Services\MentionParser;
 use App\Services\MentionService;
 use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CommentController extends Controller
 {
-    public function __construct(private MentionService $mentionService) {}
+    public function __construct(
+        private MentionService $mentionService,
+        private MentionParser $mentionParser,
+    ) {}
 
     public function store(StoreCommentRequest $request, Post $post): RedirectResponse
     {
@@ -33,7 +37,7 @@ class CommentController extends Controller
                 'body' => $validated['body'],
             ]);
 
-            if (! $post->user->is($request->user())) {
+            if ($this->shouldNotifyPostAuthor($post, $request->user(), $validated['body'])) {
                 $post->user->notify(new PostCommentedNotification($request->user(), $post, $comment));
             }
 
@@ -60,7 +64,7 @@ class CommentController extends Controller
             'body' => $validated['body'],
         ]);
 
-        if (! $post->user->is($request->user())) {
+        if ($this->shouldNotifyPostAuthor($post, $request->user(), $validated['body'])) {
             $post->user->notify(new PostCommentedNotification($request->user(), $post, $reply));
         }
 
@@ -112,5 +116,14 @@ class CommentController extends Controller
         }
 
         return route('posts.show', $parameters);
+    }
+
+    private function shouldNotifyPostAuthor(Post $post, User $commenter, string $body): bool
+    {
+        if ($post->user->is($commenter)) {
+            return false;
+        }
+
+        return ! in_array($post->user->handle, $this->mentionParser->extractHandles($body), true);
     }
 }

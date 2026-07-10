@@ -36,6 +36,7 @@
                     href="{{ route('auth.google.redirect') }}"
                     class="w-full mb-6 px-6 py-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 border border-slate-200 transition-all shadow-xs"
                 >
+                    <x-google-icon />
                     Continue with Google
                 </a>
 

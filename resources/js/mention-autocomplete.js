@@ -73,22 +73,27 @@ export function initMentionAutocomplete(textarea, searchUrl) {
             return;
         }
 
-        dropdown.innerHTML = users.map((user, index) => `
+        dropdown.innerHTML = users.map((user, index) => {
+            const isSelected = index === selectedIndex;
+
+            return `
             <button
                 type="button"
                 role="option"
+                aria-selected="${isSelected}"
                 data-mention-index="${index}"
-                class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${index === selectedIndex ? 'bg-slate-100' : 'hover:bg-slate-50'}"
+                class="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${isSelected ? 'bg-primary/10' : 'hover:bg-slate-50'}"
             >
                 <div class="h-8 w-8 shrink-0 overflow-hidden rounded-full">
                     ${renderAvatar(user)}
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-semibold text-slate-900">@${escapeHtml(user.handle)}</p>
-                    <p class="truncate text-xs text-slate-500">${escapeHtml(user.name)}</p>
+                    <p class="truncate text-sm font-semibold text-slate-900">${escapeHtml(user.name)}</p>
+                    <p class="truncate text-xs ${isSelected ? 'text-slate-700' : 'text-slate-500'}">@${escapeHtml(user.handle)}</p>
                 </div>
             </button>
-        `).join('');
+        `;
+        }).join('');
 
         dropdown.classList.remove('hidden');
 

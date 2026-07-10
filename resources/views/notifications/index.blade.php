@@ -47,7 +47,7 @@
                             <i class="fa-solid fa-bell text-2xl text-slate-400 dark:text-slate-500" aria-hidden="true"></i>
                         </div>
                         <p class="text-sm text-slate-500 dark:text-slate-400">
-                            No notifications yet. When someone follows you or likes your posts, you will see it here.
+                            No notifications yet. When someone follows you, likes your posts, or mentions you, you will see it here.
                         </p>
                     </div>
                 @endif

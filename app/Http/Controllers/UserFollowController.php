@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserFollow;
+use App\Models\UserPostSubscription;
 use App\Notifications\UserFollowedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,11 @@ class UserFollowController extends Controller
 
         if ($existingFollow !== null) {
             $existingFollow->delete();
+
+            UserPostSubscription::query()
+                ->where('subscriber_id', $follower->id)
+                ->where('subscribed_to_id', $user->id)
+                ->delete();
         } else {
             UserFollow::query()->create([
                 'follower_id' => $follower->id,

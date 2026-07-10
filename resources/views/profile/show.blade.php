@@ -45,6 +45,27 @@
                                             {{ $isFollowedByViewer ? 'Unfollow' : 'Follow' }}
                                         </button>
                                     </form>
+
+                                    @if ($isFollowedByViewer)
+                                        <form method="POST" action="{{ route('users.post-subscription.toggle', $profileUser) }}">
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                @class([
+                                                    'inline-flex items-center justify-center w-10 h-10 rounded-lg border transition-colors',
+                                                    'bg-primary border-primary text-white hover:bg-primary/90' => $isSubscribedToPostsByViewer,
+                                                    'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600' => ! $isSubscribedToPostsByViewer,
+                                                ])
+                                                aria-label="{{ $isSubscribedToPostsByViewer ? 'Turn off post notifications' : 'Get notified when this user posts' }}"
+                                                title="{{ $isSubscribedToPostsByViewer ? 'Post notifications on' : 'Notify me when they post' }}"
+                                            >
+                                                <i @class([
+                                                    'fa-solid fa-bell' => $isSubscribedToPostsByViewer,
+                                                    'fa-regular fa-bell' => ! $isSubscribedToPostsByViewer,
+                                                ]) aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 @else
                                     <a
                                         href="{{ route('login') }}"

@@ -20,6 +20,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\UserConnectionController;
 use App\Http\Controllers\UserFollowController;
+use App\Http\Controllers\UserPostSubscriptionController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\UserSearchController;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +91,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/{user}/follow', [UserFollowController::class, 'toggle'])
         ->middleware('throttle:30,1')
         ->name('users.follow.toggle');
+    Route::post('/users/{user}/subscribe', [UserPostSubscriptionController::class, 'toggle'])
+        ->middleware('throttle:30,1')
+        ->name('users.post-subscription.toggle');
     Route::post('/profile/password', [ProfileController::class, 'requestPasswordChange'])
         ->middleware('throttle:3,1')
         ->name('profile.password.request');

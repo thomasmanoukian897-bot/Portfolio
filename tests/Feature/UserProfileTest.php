@@ -5,6 +5,7 @@ use App\Models\PostBookmark;
 use App\Models\PostLike;
 use App\Models\User;
 use App\Models\UserFollow;
+use App\Models\UserPostSubscription;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -55,6 +56,38 @@ test('users cannot follow themselves', function () {
     $this->actingAs($user)
         ->post(route('users.follow.toggle', $user))
         ->assertForbidden();
+});
+
+test('profile shows post notification bell only when following', function () {
+    $viewer = User::factory()->create();
+    $profileUser = User::factory()->create(['name' => 'Bell Target']);
+
+    $this->actingAs($viewer)
+        ->get(route('users.show', $profileUser))
+        ->assertSuccessful()
+        ->assertDontSee(route('users.post-subscription.toggle', $profileUser), false)
+        ->assertDontSee('fa-regular fa-bell', false);
+
+    UserFollow::query()->create([
+        'follower_id' => $viewer->id,
+        'following_id' => $profileUser->id,
+    ]);
+
+    $this->actingAs($viewer)
+        ->get(route('users.show', $profileUser))
+        ->assertSuccessful()
+        ->assertSee(route('users.post-subscription.toggle', $profileUser), false)
+        ->assertSee('fa-regular fa-bell', false);
+
+    UserPostSubscription::query()->create([
+        'subscriber_id' => $viewer->id,
+        'subscribed_to_id' => $profileUser->id,
+    ]);
+
+    $this->actingAs($viewer)
+        ->get(route('users.show', $profileUser))
+        ->assertSuccessful()
+        ->assertSee('fa-solid fa-bell', false);
 });
 
 test('profile shows follower and following counts', function () {

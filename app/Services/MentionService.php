@@ -34,10 +34,6 @@ class MentionService
                 continue;
             }
 
-            if ($mentionedUser->is($post->user)) {
-                continue;
-            }
-
             $mentionedUser->notify(new UserMentionedNotification($commenter, $post, $comment));
         }
     }

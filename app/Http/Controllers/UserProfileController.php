@@ -79,6 +79,7 @@ class UserProfileController extends Controller
             'profileUser' => $user,
             'isOwnProfile' => $isOwnProfile,
             'isFollowedByViewer' => $user->isFollowedBy($viewer),
+            'isSubscribedToPostsByViewer' => $user->isSubscribedToPostsBy($viewer),
             'section' => $section,
             'allowedSections' => $allowedSections,
             'sectionCounts' => $sectionCounts,

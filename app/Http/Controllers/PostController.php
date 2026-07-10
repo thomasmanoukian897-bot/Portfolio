@@ -10,6 +10,7 @@ use App\Models\CommentVote;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
 use App\Services\FeaturedVideoProcessor;
+use App\Services\PostSubscriptionNotifier;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -119,6 +120,8 @@ class PostController extends Controller
         ]);
 
         $post->categories()->sync($categoryIds);
+
+        app(PostSubscriptionNotifier::class)->notifySubscribers($post);
 
         return redirect()
             ->route('posts.show', $post)
