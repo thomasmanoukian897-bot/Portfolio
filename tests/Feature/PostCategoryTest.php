@@ -134,6 +134,21 @@ test('posts index can be searched by title or excerpt', function () {
         ->assertSee('fa-magnifying-glass', false);
 });
 
+test('posts index includes layout view toggle controls', function () {
+    $user = User::factory()->create();
+
+    Post::factory()->for($user)->published()->create(['title' => 'Toggle Test Post']);
+
+    $this->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertSee('id="posts-feed"', false)
+        ->assertSee('data-posts-view="grid"', false)
+        ->assertSee('data-posts-view-toggle="grid"', false)
+        ->assertSee('data-posts-view-toggle="list"', false)
+        ->assertSee('aria-label="Grid view"', false)
+        ->assertSee('aria-label="List view"', false);
+});
+
 test('posts index supports all public sort filters', function () {
     $user = User::factory()->create();
 

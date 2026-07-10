@@ -43,7 +43,7 @@
                             <button
                                 type="submit"
                                 aria-label="Delete"
-                                class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 transition-colors"
+                                class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-950 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 transition-colors cursor-pointer"
                             >
                                 <i class="fa-solid fa-trash"></i>
                             </button>

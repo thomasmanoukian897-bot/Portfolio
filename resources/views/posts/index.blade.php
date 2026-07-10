@@ -121,30 +121,61 @@
                     </div>
                 @endif
 
-                <form method="GET" action="{{ route('posts.index') }}" class="shrink-0">
-                    @if ($search)
-                        <input type="hidden" name="search" value="{{ $search }}">
-                    @endif
-                    @if ($selectedCategory)
-                        <input type="hidden" name="category" value="{{ $selectedCategory }}">
-                    @endif
-
-                    <label for="post-sort" class="sr-only">Sort posts</label>
-                    <select
-                        id="post-sort"
-                        name="sort"
-                        onchange="this.form.submit()"
-                        class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold font-mono uppercase tracking-wider text-slate-600 transition-colors hover:border-blue-300 hover:text-primary focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                <div class="flex shrink-0 items-center gap-3">
+                    <div
+                        class="inline-flex items-center rounded-full border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900/50"
+                        role="group"
+                        aria-label="Post layout"
                     >
-                        @foreach ($sortOptions as $value => $label)
-                            <option value="{{ $value }}" @selected($selectedSort === $value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </form>
+                        <button
+                            type="button"
+                            data-posts-view-toggle="grid"
+                            aria-pressed="true"
+                            aria-label="Grid view"
+                            class="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-slate-600 transition-colors hover:border-blue-300 hover:text-primary"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            data-posts-view-toggle="list"
+                            aria-pressed="false"
+                            aria-label="List view"
+                            class="inline-flex items-center justify-center rounded-full border border-transparent px-3 py-1.5 text-slate-600 transition-colors hover:border-blue-300 hover:text-primary"
+                        >
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm0 5.25h.007v.008H3.75v-.008Zm0 5.25h.007v.008H3.75v-.008Z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="GET" action="{{ route('posts.index') }}" class="shrink-0">
+                        @if ($search)
+                            <input type="hidden" name="search" value="{{ $search }}">
+                        @endif
+                        @if ($selectedCategory)
+                            <input type="hidden" name="category" value="{{ $selectedCategory }}">
+                        @endif
+
+                        <label for="post-sort" class="sr-only">Sort posts</label>
+                        <select
+                            id="post-sort"
+                            name="sort"
+                            onchange="this.form.submit()"
+                            class="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold font-mono uppercase tracking-wider text-slate-600 transition-colors hover:border-blue-300 hover:text-primary focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        >
+                            @foreach ($sortOptions as $value => $label)
+                                <option value="{{ $value }}" @selected($selectedSort === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
             </div>
 
             @if ($posts->isNotEmpty())
-                <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3 items-start">
+                <div id="posts-feed" data-posts-view="grid">
                     @foreach ($posts as $post)
                         <x-post-card :post="$post" />
                     @endforeach

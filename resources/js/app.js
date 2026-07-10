@@ -6,6 +6,7 @@ import './mobile-drawer';
 import './library-dropdown';
 import './user-connections-modal';
 import './wysiwyg-editor';
+import './posts-view-toggle';
 import { initMentionAutocomplete, initMentionInputs } from './mention-autocomplete';
 
 const templates = JSON.parse(document.getElementById('exporter-templates-data')?.textContent ?? '[]');
