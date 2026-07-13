@@ -133,35 +133,47 @@
                 'justify-end' => $categories->isEmpty(),
             ])>
                 @if ($categories->isNotEmpty())
-                    <div class="flex flex-wrap gap-2">
-                        <a
-                            href="{{ route('posts.index', $allQuery) }}"
-                            @class([
-                                'px-4 py-2 rounded-full text-xs font-bold font-mono uppercase tracking-wider transition-colors',
-                                'bg-slate-900 text-white shadow-sm' => $selectedCategory === null,
-                                'border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-primary' => $selectedCategory !== null,
-                            ])
-                        >
-                            All <span class="tabular-nums opacity-70">({{ $totalPostsCount }})</span>
-                        </a>
-
-                        @foreach ($categories as $category)
+                    <div class="min-w-0 flex-1 overflow-x-auto">
+                        <div class="flex flex-nowrap gap-1.5 pb-0.5" role="group" aria-label="Filter by category">
                             <a
-                                href="{{ route('posts.index', array_filter([
-                                    'search' => $search,
-                                    'feed' => $selectedFeed === 'for-you' ? null : $selectedFeed,
-                                    'category' => $category->slug,
-                                    'sort' => $selectedSort === 'newest' ? null : $selectedSort,
-                                ])) }}"
+                                href="{{ route('posts.index', $allQuery) }}"
                                 @class([
-                                    'px-4 py-2 rounded-full text-xs font-bold font-mono uppercase tracking-wider transition-colors',
-                                    'bg-slate-900 text-white shadow-sm' => $selectedCategory === $category->slug,
-                                    'border border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-primary' => $selectedCategory !== $category->slug,
+                                    'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wide transition-colors',
+                                    'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900' => $selectedCategory === null,
+                                    'border border-slate-200/80 bg-white/60 text-slate-500 hover:border-slate-300 hover:text-slate-800 dark:border-slate-700/80 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200' => $selectedCategory !== null,
                                 ])
                             >
-                                {{ $category->name }} <span class="tabular-nums opacity-70">({{ $category->posts_count }})</span>
+                                All
+                                <span @class([
+                                    'inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-px text-[10px] font-medium tabular-nums',
+                                    'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900' => $selectedCategory === null,
+                                    'bg-slate-100 text-slate-500 dark:bg-slate-700/70 dark:text-slate-400' => $selectedCategory !== null,
+                                ])>{{ $totalPostsCount }}</span>
                             </a>
-                        @endforeach
+
+                            @foreach ($categories as $category)
+                                <a
+                                    href="{{ route('posts.index', array_filter([
+                                        'search' => $search,
+                                        'feed' => $selectedFeed === 'for-you' ? null : $selectedFeed,
+                                        'category' => $category->slug,
+                                        'sort' => $selectedSort === 'newest' ? null : $selectedSort,
+                                    ])) }}"
+                                    @class([
+                                        'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wide transition-colors',
+                                        'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900' => $selectedCategory === $category->slug,
+                                        'border border-slate-200/80 bg-white/60 text-slate-500 hover:border-slate-300 hover:text-slate-800 dark:border-slate-700/80 dark:bg-slate-800/40 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-200' => $selectedCategory !== $category->slug,
+                                    ])
+                                >
+                                    {{ $category->name }}
+                                    <span @class([
+                                        'inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-px text-[10px] font-medium tabular-nums',
+                                        'bg-white/20 text-white dark:bg-slate-900/15 dark:text-slate-900' => $selectedCategory === $category->slug,
+                                        'bg-slate-100 text-slate-500 dark:bg-slate-700/70 dark:text-slate-400' => $selectedCategory !== $category->slug,
+                                    ])>{{ $category->posts_count }}</span>
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
                 @endif
 
