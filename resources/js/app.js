@@ -8,6 +8,7 @@ import './messages';
 import './user-connections-modal';
 import './image-lightbox';
 import { bindCommentImageInput, commentImageFieldHtml, hasCommentContent } from './comment-images';
+import { bindCommentEmojiPicker } from './comment-emojis';
 import './wysiwyg-editor';
 import './posts-view-toggle';
 import { initMentionAutocomplete, initMentionInputs } from './mention-autocomplete';
@@ -243,7 +244,7 @@ function openReplyForm(button, initialBody = '') {
                     data-mention-input
                     class="w-full resize-none border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0"
                 ></textarea>
-                ${commentImageFieldHtml(`reply-${commentId}`)}
+                ${commentImageFieldHtml()}
                 <div class="mt-3 flex items-center justify-end gap-3">
                     <button
                         type="button"
@@ -282,6 +283,7 @@ function openReplyForm(button, initialBody = '') {
 
     if (replyForm) {
         bindCommentImageInput(replyForm);
+        bindCommentEmojiPicker(replyForm);
     }
 
     slot.querySelector('[data-comment-reply-cancel]')?.addEventListener('click', () => {
@@ -344,6 +346,7 @@ if (composerForm && ! composerForm.dataset.bound) {
     composerForm.dataset.bound = 'true';
 
     bindCommentImageInput(composerForm);
+    bindCommentEmojiPicker(composerForm);
 
     composerForm.addEventListener('submit', (event) => {
         const submit = composerForm.querySelector('#comment-composer-submit');

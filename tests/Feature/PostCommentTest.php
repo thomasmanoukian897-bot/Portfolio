@@ -23,6 +23,30 @@ test('post show links author and commenter names to user profiles', function () 
         ->assertSee(route('users.show', $commenter), false);
 });
 
+test('post show comment form includes emoji picker', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+
+    $this->actingAs($user)
+        ->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('data-comment-emoji-toggle', false)
+        ->assertSee('Emoji', false);
+});
+
+test('authenticated users can comment with emojis', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), [
+            'body' => 'Love this! 🔥🎉',
+        ])
+        ->assertRedirect(route('posts.show', $post).'#comments');
+
+    expect(Comment::query()->first()->body)->toBe('Love this! 🔥🎉');
+});
+
 test('authenticated users can comment on published posts', function () {
     $user = User::factory()->create();
     $post = Post::factory()->published()->create();

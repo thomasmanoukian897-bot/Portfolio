@@ -206,30 +206,7 @@
                                 class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors @error('body') border-red-300 focus:border-red-400 focus:ring-red-200 @enderror"
                             >{{ session('reply_to') ? '' : old('body') }}</textarea>
 
-                            <div class="mt-3 flex flex-wrap items-center gap-3">
-                                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors">
-                                    <i class="fa-regular fa-image"></i>
-                                    <span>Add image</span>
-                                    <input
-                                        type="file"
-                                        name="image"
-                                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                                        data-comment-image-input
-                                        class="sr-only"
-                                    >
-                                </label>
-                                <div data-comment-image-preview class="hidden relative">
-                                    <img src="" alt="Selected image preview" class="h-16 w-16 rounded-lg border border-slate-200 object-cover">
-                                    <button
-                                        type="button"
-                                        data-comment-image-remove
-                                        aria-label="Remove selected image"
-                                        class="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white hover:bg-slate-700 transition-colors"
-                                    >
-                                        <i class="fa-solid fa-xmark text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            <x-comment-composer-toolbar />
 
                             @if (! session('reply_to'))
                                 @error('body')

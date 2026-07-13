@@ -65,7 +65,9 @@ function bindCommentImageInput(form) {
     updateSubmitState();
 }
 
-function commentImageFieldHtml(idPrefix) {
+import { commentEmojiSectionHtml } from './comment-emojis';
+
+function commentImageFieldHtml() {
     return `
         <div class="mt-3 flex flex-wrap items-center gap-3">
             <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors">
@@ -79,6 +81,7 @@ function commentImageFieldHtml(idPrefix) {
                     class="sr-only"
                 >
             </label>
+            ${commentEmojiSectionHtml()}
             <div data-comment-image-preview class="hidden relative">
                 <img src="" alt="Selected image preview" class="h-16 w-16 rounded-lg border border-slate-200 object-cover">
                 <button
