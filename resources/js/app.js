@@ -512,19 +512,32 @@ document.querySelectorAll('[data-copy-url]').forEach((button) => {
         }
 
         const icon = button.querySelector('[data-copy-icon]');
+        const label = button.querySelector('[data-copy-label]');
         const copied = await copyText(url);
 
-        if (! copied || ! icon) {
+        if (! copied) {
             return;
         }
 
-        icon.classList.remove('fa-link');
-        icon.classList.add('fa-check');
+        if (icon) {
+            icon.classList.remove('fa-link');
+            icon.classList.add('fa-check');
 
-        setTimeout(() => {
-            icon.classList.remove('fa-check');
-            icon.classList.add('fa-link');
-        }, 2000);
+            setTimeout(() => {
+                icon.classList.remove('fa-check');
+                icon.classList.add('fa-link');
+            }, 2000);
+        }
+
+        if (label) {
+            const original = label.textContent;
+
+            label.textContent = 'Copied!';
+
+            setTimeout(() => {
+                label.textContent = original;
+            }, 2000);
+        }
     });
 });
 

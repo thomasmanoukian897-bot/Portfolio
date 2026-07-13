@@ -24,4 +24,12 @@ class Category extends Model
     {
         return $this->belongsToMany(Post::class);
     }
+
+    public static function video(): self
+    {
+        return static::query()->firstOrCreate(
+            ['slug' => 'video'],
+            ['name' => 'Video'],
+        );
+    }
 }

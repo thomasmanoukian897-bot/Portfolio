@@ -17,15 +17,19 @@ class ProfileController extends Controller
     public function edit(): View
     {
         $user = auth()->user();
+        $activeTab = match (request()->string('tab')->toString()) {
+            'password' => 'password',
+            'settings' => 'settings',
+            default => 'account',
+        };
 
         return view('profile.edit', [
             'user' => $user,
             'pendingPasswordChange' => PasswordChangeVerification::findActiveForUser($user) !== null,
-            'activeTab' => match (request()->string('tab')->toString()) {
-                'password' => 'password',
-                'settings' => 'settings',
-                default => 'account',
-            },
+            'activeTab' => $activeTab,
+            'blockedUsers' => $activeTab === 'settings'
+                ? $user->blockedUsers()->orderByPivot('created_at', 'desc')->get()
+                : collect(),
         ]);
     }
 

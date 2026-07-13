@@ -656,10 +656,15 @@ test('authenticated users can upload a video when publishing a post', function (
         ->assertRedirect(route('posts.show', 'video-post'));
 
     $post = Post::query()->where('slug', 'video-post')->first();
+    $videoCategory = Category::video();
 
     expect($post->video_path)->not->toBeNull();
     expect($post->image_path)->not->toBeNull();
     expect($post->hasVideo())->toBeTrue();
+    expect($post->categories->pluck('id')->all())->toEqualCanonicalizing([
+        $category->id,
+        $videoCategory->id,
+    ]);
     Storage::disk('public')->assertExists($post->video_path);
     Storage::disk('public')->assertExists($post->image_path);
 
@@ -670,6 +675,92 @@ test('authenticated users can upload a video when publishing a post', function (
     $this->get(route('posts.index'))
         ->assertSuccessful()
         ->assertSee('w-6 h-6', false);
+});
+
+test('posts with a video are automatically assigned the video category', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $development = Category::factory()->create(['name' => 'Development', 'slug' => 'development']);
+    $video = UploadedFile::fake()->create('demo.mp4', 1024, 'video/mp4');
+
+    $this->actingAs($user)
+        ->post(route('posts.store'), [
+            'title' => 'Auto Video Category Post',
+            'content' => '<p>Hello world</p>',
+            'category_ids' => [$development->id],
+            'video' => $video,
+        ])
+        ->assertRedirect(route('posts.show', 'auto-video-category-post'));
+
+    $post = Post::query()->where('slug', 'auto-video-category-post')->firstOrFail();
+    $videoCategory = Category::video();
+
+    expect($post->categories->pluck('id')->all())->toEqualCanonicalizing([
+        $development->id,
+        $videoCategory->id,
+    ]);
+});
+
+test('admin posts with a video are automatically assigned the video category', function () {
+    Storage::fake('public');
+
+    $admin = User::factory()->admin()->create();
+    $business = Category::factory()->create(['name' => 'Business', 'slug' => 'business']);
+    $video = UploadedFile::fake()->create('demo.mp4', 1024, 'video/mp4');
+
+    $this->actingAs($admin)
+        ->post(route('admin.posts.store'), [
+            'title' => 'Admin Video Post',
+            'content' => '<p>Hello world</p>',
+            'category_ids' => [$business->id],
+            'video' => $video,
+        ])
+        ->assertRedirect(route('admin.posts.index'));
+
+    $post = Post::query()->where('slug', 'admin-video-post')->firstOrFail();
+    $videoCategory = Category::video();
+
+    expect($post->categories->pluck('id')->all())->toEqualCanonicalizing([
+        $business->id,
+        $videoCategory->id,
+    ]);
+});
+
+test('removing a video from a post removes the video category', function () {
+    Storage::fake('public');
+
+    $admin = User::factory()->admin()->create();
+    $development = Category::factory()->create(['name' => 'Development', 'slug' => 'development']);
+    $videoCategory = Category::video();
+    $video = UploadedFile::fake()->create('demo.mp4', 1024, 'video/mp4');
+
+    $this->actingAs($admin)
+        ->post(route('admin.posts.store'), [
+            'title' => 'Removable Video Post',
+            'content' => '<p>Hello world</p>',
+            'category_ids' => [$development->id],
+            'video' => $video,
+        ])
+        ->assertRedirect(route('admin.posts.index'));
+
+    $post = Post::query()->where('slug', 'removable-video-post')->firstOrFail();
+
+    expect($post->categories->pluck('id')->all())->toEqualCanonicalizing([
+        $development->id,
+        $videoCategory->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.posts.update', $post), [
+            'title' => $post->title,
+            'content' => $post->content,
+            'category_ids' => [$development->id],
+            'remove_video' => true,
+        ])
+        ->assertRedirect(route('admin.posts.index'));
+
+    expect($post->fresh()->categories->pluck('id')->all())->toBe([$development->id]);
 });
 
 test('post authors see a delete button on their posts', function () {

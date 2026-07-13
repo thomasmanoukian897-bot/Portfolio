@@ -23,6 +23,12 @@ export function initProfileDropdowns() {
         menu.addEventListener('click', (event) => {
             event.stopPropagation();
         });
+
+        menu.querySelectorAll('[data-profile-dropdown-close]').forEach((element) => {
+            element.addEventListener('click', () => {
+                closeAllProfileDropdowns();
+            });
+        });
     });
 
     document.addEventListener('click', closeAllProfileDropdowns);

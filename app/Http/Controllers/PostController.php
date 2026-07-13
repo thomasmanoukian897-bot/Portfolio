@@ -10,6 +10,7 @@ use App\Models\CommentVote;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
 use App\Services\FeaturedVideoProcessor;
+use App\Services\PostCategoryResolver;
 use App\Services\PostSubscriptionNotifier;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -87,6 +88,17 @@ class PostController extends Controller
             });
         }
 
+        if ($request->user() !== null) {
+            $blockedUserIds = $request->user()->blockedUsers()->pluck('users.id')
+                ->merge($request->user()->blockedBy()->pluck('users.id'))
+                ->unique()
+                ->values();
+
+            if ($blockedUserIds->isNotEmpty()) {
+                $postsQuery->whereNotIn('user_id', $blockedUserIds);
+            }
+        }
+
         if ($feed === 'featured') {
             $followingIds = $request->user()?->following()->pluck('users.id') ?? collect();
 
@@ -150,7 +162,9 @@ class PostController extends Controller
                 : null,
         ]);
 
-        $post->categories()->sync($categoryIds);
+        $post->categories()->sync(
+            app(PostCategoryResolver::class)->resolve($categoryIds, $request->hasFile('video'))
+        );
 
         app(PostSubscriptionNotifier::class)->notifySubscribers($post);
 

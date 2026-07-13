@@ -4,6 +4,7 @@ use App\Models\Post;
 use App\Models\PostBookmark;
 use App\Models\PostLike;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Models\UserFollow;
 use App\Models\UserPostSubscription;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,6 +21,20 @@ test('anyone can view a user profile', function () {
         ->assertSee('Visible Post')
         ->assertDontSee('Edit profile')
         ->assertDontSee('View archive');
+});
+
+test('profile page includes grid and list view toggle when posts are present', function () {
+    $user = User::factory()->create();
+    Post::factory()->published()->for($user)->create(['title' => 'Toggle Test Post']);
+
+    $this->get(route('users.show', $user))
+        ->assertSuccessful()
+        ->assertSee('id="posts-feed"', false)
+        ->assertSee('data-posts-view="grid"', false)
+        ->assertSee('data-posts-view-toggle="grid"', false)
+        ->assertSee('data-posts-view-toggle="list"', false)
+        ->assertSee('aria-label="Grid view"', false)
+        ->assertSee('aria-label="List view"', false);
 });
 
 test('authenticated users see edit profile on their own profile', function () {
@@ -193,7 +208,47 @@ test('profile settings tab is available on edit profile page', function () {
         ->get(route('profile.edit', ['tab' => 'settings']))
         ->assertSuccessful()
         ->assertSee('Public likes')
-        ->assertSee('Public bookmarks');
+        ->assertSee('Public bookmarks')
+        ->assertSee('Blocked')
+        ->assertSee('You have not blocked anyone.');
+});
+
+test('profile settings tab shows blocked users in a scrollable list', function () {
+    $user = User::factory()->create();
+    $blockedUser = User::factory()->create(['name' => 'Blocked Person', 'handle' => 'blocked-person']);
+
+    UserBlock::query()->create([
+        'blocker_id' => $user->id,
+        'blocked_id' => $blockedUser->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('profile.edit', ['tab' => 'settings']))
+        ->assertSuccessful()
+        ->assertSee('Blocked Person')
+        ->assertSee('@blocked-person')
+        ->assertSee(route('users.block.destroy', $blockedUser), false);
+});
+
+test('users can unblock someone from profile settings tab', function () {
+    $user = User::factory()->create();
+    $blockedUser = User::factory()->create(['name' => 'Former Block']);
+
+    UserBlock::query()->create([
+        'blocker_id' => $user->id,
+        'blocked_id' => $blockedUser->id,
+    ]);
+
+    $this->actingAs($user)
+        ->delete(route('users.block.destroy', $blockedUser))
+        ->assertRedirect(route('profile.edit', ['tab' => 'settings']))
+        ->assertSessionHas('status', 'You unblocked Former Block.');
+
+    expect($user->fresh()->hasBlocked($blockedUser))->toBeFalse();
+
+    $this->actingAs($user)
+        ->get(route('users.show', $blockedUser))
+        ->assertSuccessful();
 });
 
 test('profile defaults to posts section for invalid section values', function () {
@@ -281,4 +336,88 @@ test('connection endpoints include follow state for authenticated viewers', func
         ->getJson(route('users.following', $user))
         ->assertSuccessful()
         ->assertJsonPath('users.0.is_followed_by_viewer', true);
+});
+
+test('profile shows options menu with copy link and block actions for other users', function () {
+    $viewer = User::factory()->create();
+    $profileUser = User::factory()->create(['name' => 'Menu Target']);
+
+    $this->actingAs($viewer)
+        ->get(route('users.show', $profileUser))
+        ->assertSuccessful()
+        ->assertSee('fa-ellipsis', false)
+        ->assertSee('Copy link to profile')
+        ->assertSee('Block this author')
+        ->assertSee(route('users.block', $profileUser), false)
+        ->assertSee(url(route('users.show', $profileUser)), false);
+
+    $this->get(route('users.show', $profileUser))
+        ->assertSuccessful()
+        ->assertSee('Copy link to profile')
+        ->assertSee('Block this author');
+});
+
+test('own profile does not show profile options menu', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('users.show', $user))
+        ->assertSuccessful()
+        ->assertDontSee('fa-ellipsis', false)
+        ->assertDontSee('Copy link to profile');
+});
+
+test('users can block other users', function () {
+    $blocker = User::factory()->create();
+    $blocked = User::factory()->create(['name' => 'Blocked Author']);
+
+    UserFollow::query()->create([
+        'follower_id' => $blocker->id,
+        'following_id' => $blocked->id,
+    ]);
+
+    UserPostSubscription::query()->create([
+        'subscriber_id' => $blocker->id,
+        'subscribed_to_id' => $blocked->id,
+    ]);
+
+    $this->actingAs($blocker)
+        ->post(route('users.block', $blocked))
+        ->assertRedirect(route('posts.index'))
+        ->assertSessionHas('status', 'You blocked Blocked Author.');
+
+    expect($blocker->fresh()->hasBlocked($blocked))->toBeTrue()
+        ->and(UserFollow::query()->count())->toBe(0)
+        ->and(UserPostSubscription::query()->count())->toBe(0);
+
+    $this->actingAs($blocker)
+        ->get(route('users.show', $blocked))
+        ->assertNotFound();
+});
+
+test('users cannot block themselves', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('users.block', $user))
+        ->assertForbidden();
+});
+
+test('blocked users posts are hidden from the posts index', function () {
+    $blocker = User::factory()->create();
+    $blocked = User::factory()->create();
+
+    UserBlock::query()->create([
+        'blocker_id' => $blocker->id,
+        'blocked_id' => $blocked->id,
+    ]);
+
+    Post::factory()->published()->for($blocked)->create(['title' => 'Blocked Author Post']);
+    Post::factory()->published()->create(['title' => 'Visible Post']);
+
+    $this->actingAs($blocker)
+        ->get(route('posts.index'))
+        ->assertSuccessful()
+        ->assertDontSee('Blocked Author Post')
+        ->assertSee('Visible Post');
 });

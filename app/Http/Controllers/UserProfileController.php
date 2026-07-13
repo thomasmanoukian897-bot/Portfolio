@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserProfileController extends Controller
 {
@@ -13,6 +14,10 @@ class UserProfileController extends Controller
     {
         $viewer = $request->user();
         $isOwnProfile = $viewer?->is($user) ?? false;
+
+        if (! $isOwnProfile && $viewer?->isBlockedWith($user)) {
+            throw new NotFoundHttpException;
+        }
 
         $allowedSections = ['posts'];
 

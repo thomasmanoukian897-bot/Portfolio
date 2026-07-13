@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Development', 'slug' => 'development', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Design', 'slug' => 'design', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Business', 'slug' => 'business', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Video', 'slug' => 'video', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $this->call(PostSeeder::class);

@@ -17,6 +17,8 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.webawesome.com/3.6.0/styles/webawesome.css">
+    <script type="module" src="https://cdn.webawesome.com/3.6.0/webawesome.loader.js"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

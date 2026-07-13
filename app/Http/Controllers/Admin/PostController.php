@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Services\FeaturedImageProcessor;
 use App\Services\FeaturedVideoProcessor;
+use App\Services\PostCategoryResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -66,7 +67,9 @@ class PostController extends Controller
                 : null,
         ]);
 
-        $post->categories()->sync($categoryIds);
+        $post->categories()->sync(
+            app(PostCategoryResolver::class)->resolve($categoryIds, $request->hasFile('video'))
+        );
 
         return redirect()
             ->route('admin.posts.index')
@@ -108,7 +111,12 @@ class PostController extends Controller
             'slug' => $this->resolveSlug($validated['title'], $validated['slug'] ?? null, $post),
         ]);
 
-        $post->categories()->sync($categoryIds);
+        $hasVideo = $request->hasFile('video')
+            || (! $request->boolean('remove_video') && $post->hasVideo());
+
+        $post->categories()->sync(
+            app(PostCategoryResolver::class)->resolve($categoryIds, $hasVideo)
+        );
 
         return redirect()
             ->route('admin.posts.index')

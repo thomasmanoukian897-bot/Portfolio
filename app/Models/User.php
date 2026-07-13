@@ -169,6 +169,45 @@ class User extends Authenticatable
         return $this->postSubscribers()->where('users.id', $user->id)->exists();
     }
 
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'blocker_id', 'blocked_id')
+            ->withTimestamps();
+    }
+
+    public function blockedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_blocks', 'blocked_id', 'blocker_id')
+            ->withTimestamps();
+    }
+
+    public function hasBlocked(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->blockedUsers()->where('users.id', $user->id)->exists();
+    }
+
+    public function isBlockedBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->blockedBy()->where('users.id', $user->id)->exists();
+    }
+
+    public function isBlockedWith(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->hasBlocked($user) || $this->isBlockedBy($user);
+    }
+
     public static function generateUniqueHandle(string $name): string
     {
         $base = Str::slug($name);

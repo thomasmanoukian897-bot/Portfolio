@@ -146,56 +146,100 @@
                         </div>
                     </form>
                 @elseif ($activeTab === 'settings')
-                    <form method="POST" action="{{ route('profile.privacy.update') }}" class="p-8 space-y-8">
-                        @csrf
-                        @method('PUT')
+                    <div class="p-8 space-y-8">
+                        <form method="POST" action="{{ route('profile.privacy.update') }}" class="space-y-8">
+                            @csrf
+                            @method('PUT')
 
-                        <div class="space-y-6">
+                            <div class="space-y-6">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Privacy</h2>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400">
+                                        Choose whether other users can see your liked posts and bookmarks on your profile.
+                                    </p>
+                                </div>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input type="hidden" name="likes_public" value="0" />
+                                    <input
+                                        type="checkbox"
+                                        name="likes_public"
+                                        value="1"
+                                        @checked(old('likes_public', $user->likes_public))
+                                        class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Public likes</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Allow others to see posts you have liked on your profile.</span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input type="hidden" name="bookmarks_public" value="0" />
+                                    <input
+                                        type="checkbox"
+                                        name="bookmarks_public"
+                                        value="1"
+                                        @checked(old('bookmarks_public', $user->bookmarks_public))
+                                        class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Public bookmarks</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Allow others to see posts you have saved on your profile.</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn-gradient text-white px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                                Save Settings
+                            </button>
+                        </form>
+
+                        <div class="space-y-4 border-t border-slate-200 dark:border-slate-700 pt-8">
                             <div>
-                                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Privacy</h2>
+                                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Blocked</h2>
                                 <p class="text-sm text-slate-600 dark:text-slate-400">
-                                    Choose whether other users can see your liked posts and bookmarks on your profile.
+                                    People you have blocked cannot see your profile or interact with you.
                                 </p>
                             </div>
 
-                            <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <input type="hidden" name="likes_public" value="0" />
-                                <input
-                                    type="checkbox"
-                                    name="likes_public"
-                                    value="1"
-                                    @checked(old('likes_public', $user->likes_public))
-                                    class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
-                                />
-                                <span>
-                                    <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Public likes</span>
-                                    <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Allow others to see posts you have liked on your profile.</span>
-                                </span>
-                            </label>
+                            <div class="max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-700">
+                                @forelse ($blockedUsers as $blockedUser)
+                                    <div class="flex items-center justify-between gap-4 p-4">
+                                        <div class="flex min-w-0 items-center gap-3">
+                                            <x-user-avatar :user="$blockedUser" size="sm" />
+                                            <div class="min-w-0">
+                                                <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                                    {{ $blockedUser->name }}
+                                                </p>
+                                                <p class="truncate text-sm text-slate-500 dark:text-slate-400">
+                                                    {{ '@'.$blockedUser->handle }}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                            <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <input type="hidden" name="bookmarks_public" value="0" />
-                                <input
-                                    type="checkbox"
-                                    name="bookmarks_public"
-                                    value="1"
-                                    @checked(old('bookmarks_public', $user->bookmarks_public))
-                                    class="mt-1 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
-                                />
-                                <span>
-                                    <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Public bookmarks</span>
-                                    <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Allow others to see posts you have saved on your profile.</span>
-                                </span>
-                            </label>
+                                        <form method="POST" action="{{ route('users.block.destroy', $blockedUser) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button
+                                                type="submit"
+                                                class="shrink-0 rounded-lg border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                                            >
+                                                Unblock
+                                            </button>
+                                        </form>
+                                    </div>
+                                @empty
+                                    <p class="p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                                        You have not blocked anyone.
+                                    </p>
+                                @endforelse
+                            </div>
                         </div>
-
-                        <button
-                            type="submit"
-                            class="btn-gradient text-white px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        >
-                            Save Settings
-                        </button>
-                    </form>
+                    </div>
                 @else
                     <div class="p-8 space-y-8">
                         @if ($pendingPasswordChange)

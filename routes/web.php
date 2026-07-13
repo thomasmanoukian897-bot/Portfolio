@@ -18,6 +18,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostLikeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\UserBlockController;
 use App\Http\Controllers\UserConnectionController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\UserPostSubscriptionController;
@@ -92,6 +93,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/{user}/follow', [UserFollowController::class, 'toggle'])
         ->middleware('throttle:30,1')
         ->name('users.follow.toggle');
+    Route::post('/users/{user}/block', [UserBlockController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('users.block');
+    Route::delete('/users/{user}/block', [UserBlockController::class, 'destroy'])
+        ->middleware('throttle:30,1')
+        ->name('users.block.destroy');
     Route::post('/users/{user}/subscribe', [UserPostSubscriptionController::class, 'toggle'])
         ->middleware('throttle:30,1')
         ->name('users.post-subscription.toggle');
