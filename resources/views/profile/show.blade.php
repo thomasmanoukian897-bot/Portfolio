@@ -101,6 +101,26 @@
                                         </button>
 
                                         @auth
+                                            <form method="POST" action="{{ route('messages.store') }}">
+                                                @csrf
+                                                <input type="hidden" name="user_id" value="{{ $profileUser->id }}" />
+                                                <button
+                                                    type="submit"
+                                                    class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                                                >
+                                                    Start Messaging
+                                                </button>
+                                            </form>
+                                        @else
+                                            <a
+                                                href="{{ route('login') }}"
+                                                class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                            >
+                                                Start Messaging
+                                            </a>
+                                        @endauth
+
+                                        @auth
                                             <form method="POST" action="{{ route('users.block', $profileUser) }}">
                                                 @csrf
                                                 <button

@@ -4,7 +4,10 @@ import './portfolio';
 import './profile-dropdown';
 import './mobile-drawer';
 import './library-dropdown';
+import './messages';
 import './user-connections-modal';
+import './image-lightbox';
+import { bindCommentImageInput, commentImageFieldHtml, hasCommentContent } from './comment-images';
 import './wysiwyg-editor';
 import './posts-view-toggle';
 import { initMentionAutocomplete, initMentionInputs } from './mention-autocomplete';
@@ -196,12 +199,12 @@ function setVoteIconState(icon, type, isActive) {
         : '';
 }
 
-function setReplySubmitState(textarea) {
-    const form = textarea.closest('[data-comment-reply-form]');
+function setReplySubmitState(textarea, imageInput) {
+    const form = textarea?.closest('[data-comment-reply-form]') ?? imageInput?.closest('[data-comment-reply-form]');
     const submit = form?.querySelector('[data-comment-reply-submit]');
 
     if (submit) {
-        submit.disabled = textarea.value.trim() === '';
+        submit.disabled = ! hasCommentContent(textarea, imageInput);
     }
 }
 
@@ -227,7 +230,7 @@ function openReplyForm(button, initialBody = '') {
 
     slot.classList.remove('hidden');
     slot.innerHTML = `
-        <form method="POST" action="${action}" data-comment-reply-form="${commentId}">
+        <form method="POST" action="${action}" enctype="multipart/form-data" data-comment-reply-form="${commentId}">
             <input type="hidden" name="_token" value="${token}">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <label class="sr-only" for="reply-body-${commentId}">Reply to ${authorName}</label>
@@ -235,12 +238,12 @@ function openReplyForm(button, initialBody = '') {
                     id="reply-body-${commentId}"
                     name="body"
                     rows="3"
-                    required
                     placeholder="Replying to ${authorName}. Use @ to mention someone."
                     data-comment-reply-input
                     data-mention-input
                     class="w-full resize-none border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0"
                 ></textarea>
+                ${commentImageFieldHtml(`reply-${commentId}`)}
                 <div class="mt-3 flex items-center justify-end gap-3">
                     <button
                         type="button"
@@ -263,16 +266,22 @@ function openReplyForm(button, initialBody = '') {
     `;
 
     const textarea = slot.querySelector('[data-comment-reply-input]');
+    const imageInput = slot.querySelector('[data-comment-image-input]');
     const mentionSearchUrl = commentsSection?.dataset.usersSearchUrl ?? null;
 
     if (textarea) {
         textarea.value = initialBody;
-        setReplySubmitState(textarea);
         textarea.addEventListener('input', () => {
-            setReplySubmitState(textarea);
+            setReplySubmitState(textarea, imageInput);
         });
         initMentionAutocomplete(textarea, mentionSearchUrl);
         textarea.focus();
+    }
+
+    const replyForm = slot.querySelector('[data-comment-reply-form]');
+
+    if (replyForm) {
+        bindCommentImageInput(replyForm);
     }
 
     slot.querySelector('[data-comment-reply-cancel]')?.addEventListener('click', () => {
@@ -334,10 +343,14 @@ const composerForm = document.getElementById('comment-composer-form');
 if (composerForm && ! composerForm.dataset.bound) {
     composerForm.dataset.bound = 'true';
 
+    bindCommentImageInput(composerForm);
+
     composerForm.addEventListener('submit', (event) => {
         const submit = composerForm.querySelector('#comment-composer-submit');
+        const textarea = composerForm.querySelector('[data-comment-input]');
+        const imageInput = composerForm.querySelector('[data-comment-image-input]');
 
-        if (submit?.disabled) {
+        if (submit?.disabled || ! hasCommentContent(textarea, imageInput)) {
             event.preventDefault();
 
             return;
@@ -420,7 +433,7 @@ document.querySelectorAll('[data-post-like]').forEach((button) => {
         const icon = button.querySelector('[data-like-icon]');
         const countEl = button.querySelector('[data-like-count]');
 
-        if (! url || ! token || ! icon || ! countEl) {
+        if (! url || ! token || ! icon) {
             return;
         }
 
@@ -442,7 +455,10 @@ document.querySelectorAll('[data-post-like]').forEach((button) => {
             }
 
             const data = await response.json();
-            countEl.textContent = String(data.count);
+
+            if (countEl) {
+                countEl.textContent = String(data.count);
+            }
 
             if (data.liked) {
                 icon.classList.remove('fa-regular');

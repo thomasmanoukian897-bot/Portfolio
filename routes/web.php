@@ -11,7 +11,9 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommentVoteController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostBookmarkController;
 use App\Http\Controllers\PostController;
@@ -81,6 +83,43 @@ Route::middleware('auth')->group(function () {
     Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+
+    Route::get('/messages', [ConversationController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
+    Route::post('/messages', [ConversationController::class, 'storeDirect'])
+        ->middleware('throttle:30,1')
+        ->name('messages.store');
+    Route::post('/messages/groups', [ConversationController::class, 'storeGroup'])
+        ->middleware('throttle:10,1')
+        ->name('messages.groups.store');
+    Route::patch('/messages/{conversation}/avatar', [ConversationController::class, 'updateAvatar'])
+        ->middleware('throttle:10,1')
+        ->name('messages.groups.avatar.update');
+    Route::patch('/messages/{conversation}/name', [ConversationController::class, 'updateName'])
+        ->middleware('throttle:10,1')
+        ->name('messages.groups.name.update');
+    Route::delete('/messages/{conversation}/members/{user}', [ConversationController::class, 'kickMember'])
+        ->middleware('throttle:10,1')
+        ->name('messages.groups.members.kick');
+    Route::delete('/messages/{conversation}/leave', [ConversationController::class, 'leave'])
+        ->middleware('throttle:10,1')
+        ->name('messages.groups.leave');
+    Route::patch('/messages/{conversation}/notifications', [ConversationController::class, 'toggleNotifications'])
+        ->middleware('throttle:30,1')
+        ->name('messages.notifications.toggle');
+    Route::post('/messages/{conversation}/accept', [ConversationController::class, 'acceptRequest'])
+        ->middleware('throttle:30,1')
+        ->name('messages.requests.accept');
+    Route::delete('/messages/{conversation}/request', [ConversationController::class, 'declineRequest'])
+        ->middleware('throttle:30,1')
+        ->name('messages.requests.decline');
+    Route::get('/messages/{conversation}/messages', [MessageController::class, 'index'])
+        ->middleware('throttle:120,1')
+        ->name('messages.messages.index');
+    Route::post('/messages/{conversation}/messages', [MessageController::class, 'store'])
+        ->middleware('throttle:60,1')
+        ->name('messages.messages.store');
+
     Route::get('/users/search', UserSearchController::class)
         ->middleware('throttle:60,1')
         ->name('users.search');

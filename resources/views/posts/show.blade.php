@@ -119,7 +119,9 @@
                             class="{{ $isLikedByUser ? 'fa-solid fa-heart' : 'fa-regular fa-heart' }}"
                             @if ($isLikedByUser) style="color: rgb(255, 0, 0);" @endif
                         ></i>
-                        <span data-like-count class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                        @unless ($post->likes_hidden)
+                            <span data-like-count class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                        @endunless
                     </button>
                 @else
                     <a
@@ -128,7 +130,9 @@
                         class="{{ $postActionButtonClass }}"
                     >
                         <i class="fa-regular fa-heart"></i>
-                        <span class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                        @unless ($post->likes_hidden)
+                            <span class="text-sm font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                        @endunless
                     </a>
                 @endauth
 
@@ -178,48 +182,85 @@
                     <span class="text-slate-400 font-normal text-lg">({{ $post->comments_count }})</span>
                 </h2>
 
-                @auth
-                    <form
-                        id="comment-composer-form"
-                        method="POST"
-                        action="{{ route('posts.comments.store', $post) }}"
-                        class="mb-10"
-                    >
-                        @csrf
-
-                        <label for="comment-body" class="block text-sm font-semibold text-slate-700 mb-2">
-                            Add a comment
-                        </label>
-                        <textarea
-                            id="comment-body"
-                            name="body"
-                            rows="4"
-                            required
-                            placeholder="Share your thoughts... Use @ to mention someone"
-                            data-mention-input
-                            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors @error('body') border-red-300 focus:border-red-400 focus:ring-red-200 @enderror"
-                        >{{ session('reply_to') ? '' : old('body') }}</textarea>
-
-                        @if (! session('reply_to'))
-                            @error('body')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        @endif
-
-                        <button
-                            type="submit"
-                            id="comment-composer-submit"
-                            class="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
+                @if ($post->comments_enabled)
+                    @auth
+                        <form
+                            id="comment-composer-form"
+                            method="POST"
+                            action="{{ route('posts.comments.store', $post) }}"
+                            enctype="multipart/form-data"
+                            class="mb-10"
                         >
-                            Post comment
-                        </button>
-                    </form>
+                            @csrf
+
+                            <label for="comment-body" class="block text-sm font-semibold text-slate-700 mb-2">
+                                Add a comment
+                            </label>
+                            <textarea
+                                id="comment-body"
+                                name="body"
+                                rows="4"
+                                placeholder="Share your thoughts... Use @ to mention someone"
+                                data-mention-input
+                                data-comment-input
+                                class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors @error('body') border-red-300 focus:border-red-400 focus:ring-red-200 @enderror"
+                            >{{ session('reply_to') ? '' : old('body') }}</textarea>
+
+                            <div class="mt-3 flex flex-wrap items-center gap-3">
+                                <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900 transition-colors">
+                                    <i class="fa-regular fa-image"></i>
+                                    <span>Add image</span>
+                                    <input
+                                        type="file"
+                                        name="image"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        data-comment-image-input
+                                        class="sr-only"
+                                    >
+                                </label>
+                                <div data-comment-image-preview class="hidden relative">
+                                    <img src="" alt="Selected image preview" class="h-16 w-16 rounded-lg border border-slate-200 object-cover">
+                                    <button
+                                        type="button"
+                                        data-comment-image-remove
+                                        aria-label="Remove selected image"
+                                        class="absolute -right-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-white hover:bg-slate-700 transition-colors"
+                                    >
+                                        <i class="fa-solid fa-xmark text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (! session('reply_to'))
+                                @error('body')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                                @error('image')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            @endif
+
+                            <button
+                                type="submit"
+                                id="comment-composer-submit"
+                                data-comment-submit
+                                disabled
+                                class="mt-4 inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                Post comment
+                            </button>
+                        </form>
+                    @else
+                        <p class="mb-10 text-slate-600">
+                            <a href="{{ route('login') }}" class="font-semibold text-primary hover:text-blue-700 transition-colors">Sign in</a>
+                            to join the conversation.
+                        </p>
+                    @endauth
                 @else
-                    <p class="mb-10 text-slate-600">
-                        <a href="{{ route('login') }}" class="font-semibold text-primary hover:text-blue-700 transition-colors">Sign in</a>
-                        to join the conversation.
+                    <p class="mb-10 text-sm text-slate-500">
+                        Comments are turned off for this post.
                     </p>
-                @endauth
+                @endif
 
                 @if ($post->comments_count === 0)
                     <p class="text-slate-500 text-sm">No comments yet. Be the first to share your thoughts.</p>
@@ -230,7 +271,7 @@
                                 :post="$post"
                                 :comment="$comment"
                                 :comment-votes="$commentVotes"
-                                :can-reply="true"
+                                :can-reply="$post->comments_enabled"
                             />
                         @endforeach
                     </ul>

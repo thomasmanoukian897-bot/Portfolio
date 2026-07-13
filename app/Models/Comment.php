@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Comment extends Model
 {
@@ -26,6 +27,7 @@ class Comment extends Model
         'user_id',
         'parent_id',
         'body',
+        'image_path',
     ];
 
     /**
@@ -80,5 +82,35 @@ class Comment extends Model
             : User::query()->whereIn('handle', $parser->extractHandles($this->body))->get();
 
         return $parser->render($this->body, $users);
+    }
+
+    public function imageUrl(): ?string
+    {
+        if ($this->image_path === null) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->image_path);
+    }
+
+    public function hasImage(): bool
+    {
+        return $this->image_path !== null;
+    }
+
+    public function deleteImage(): void
+    {
+        if ($this->image_path === null) {
+            return;
+        }
+
+        Storage::disk('public')->delete($this->image_path);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Comment $comment): void {
+            $comment->deleteImage();
+        });
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\GroupAddPermission;
+use App\Enums\MessagePermission;
 use App\Models\Post;
 use App\Models\PostBookmark;
 use App\Models\PostLike;
@@ -139,6 +141,23 @@ test('profile sidebar link is visible to authenticated users', function () {
         ->assertSee(route('users.show', $user), false);
 });
 
+test('settings sidebar link is visible to authenticated users', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('home'))
+        ->assertSuccessful()
+        ->assertSee('href="'.route('profile.edit', ['tab' => 'settings']).'"', false)
+        ->assertSee('fa-gear', false)
+        ->assertSee('Settings');
+});
+
+test('settings sidebar link is hidden from guests', function () {
+    $this->get(route('home'))
+        ->assertSuccessful()
+        ->assertDontSee('href="'.route('profile.edit', ['tab' => 'settings']).'"', false);
+});
+
 test('private likes and bookmarks are hidden from other users', function () {
     $owner = User::factory()->create(['likes_public' => false, 'bookmarks_public' => false]);
     $viewer = User::factory()->create();
@@ -191,6 +210,8 @@ test('users can update privacy settings from profile settings tab', function () 
         ->put(route('profile.privacy.update'), [
             'likes_public' => '1',
             'bookmarks_public' => '1',
+            'group_add_permission' => 'following_only',
+            'message_permission' => 'followers_only',
         ])
         ->assertRedirect(route('profile.edit', ['tab' => 'settings']))
         ->assertSessionHas('status');
@@ -198,7 +219,9 @@ test('users can update privacy settings from profile settings tab', function () 
     $user->refresh();
 
     expect($user->likes_public)->toBeTrue()
-        ->and($user->bookmarks_public)->toBeTrue();
+        ->and($user->bookmarks_public)->toBeTrue()
+        ->and($user->group_add_permission)->toBe(GroupAddPermission::FollowingOnly)
+        ->and($user->message_permission)->toBe(MessagePermission::FollowersOnly);
 });
 
 test('profile settings tab is available on edit profile page', function () {
@@ -209,6 +232,12 @@ test('profile settings tab is available on edit profile page', function () {
         ->assertSuccessful()
         ->assertSee('Public likes')
         ->assertSee('Public bookmarks')
+        ->assertSee('Who can add you to group chats')
+        ->assertSee('Who can message you')
+        ->assertSee('Your followers')
+        ->assertSee('No one')
+        ->assertSee('Everyone')
+        ->assertSee('Only people you follow')
         ->assertSee('Blocked')
         ->assertSee('You have not blocked anyone.');
 });
@@ -347,13 +376,16 @@ test('profile shows options menu with copy link and block actions for other user
         ->assertSuccessful()
         ->assertSee('fa-ellipsis', false)
         ->assertSee('Copy link to profile')
+        ->assertSee('Start Messaging')
         ->assertSee('Block this author')
+        ->assertSee(route('messages.store'), false)
         ->assertSee(route('users.block', $profileUser), false)
         ->assertSee(url(route('users.show', $profileUser)), false);
 
     $this->get(route('users.show', $profileUser))
         ->assertSuccessful()
         ->assertSee('Copy link to profile')
+        ->assertSee('Start Messaging')
         ->assertSee('Block this author');
 });
 

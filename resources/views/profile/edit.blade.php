@@ -190,6 +190,94 @@
                                 </label>
                             </div>
 
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Who can add you to group chats</h3>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                        Control who is allowed to include you when creating a group conversation.
+                                    </p>
+                                </div>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="group_add_permission"
+                                        value="{{ \App\Enums\GroupAddPermission::Everyone->value }}"
+                                        @checked(old('group_add_permission', $user->group_add_permission->value) === \App\Enums\GroupAddPermission::Everyone->value)
+                                        class="mt-1 border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Everyone</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Any user can add you to a group chat.</span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="group_add_permission"
+                                        value="{{ \App\Enums\GroupAddPermission::FollowingOnly->value }}"
+                                        @checked(old('group_add_permission', $user->group_add_permission->value) === \App\Enums\GroupAddPermission::FollowingOnly->value)
+                                        class="mt-1 border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Only people you follow</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Only users you follow can add you to a group chat.</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="space-y-4 border-t border-slate-200 dark:border-slate-700 pt-8">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Who can message you</h3>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                        People you follow or have chatted with before can always send you a message unless you block them.
+                                    </p>
+                                </div>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="message_permission"
+                                        value="{{ \App\Enums\MessagePermission::Everyone->value }}"
+                                        @checked(old('message_permission', $user->message_permission->value) === \App\Enums\MessagePermission::Everyone->value)
+                                        class="mt-1 border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Everyone</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Anyone can send you a message request.</span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="message_permission"
+                                        value="{{ \App\Enums\MessagePermission::FollowersOnly->value }}"
+                                        @checked(old('message_permission', $user->message_permission->value) === \App\Enums\MessagePermission::FollowersOnly->value)
+                                        class="mt-1 border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">Your followers</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Only people who follow you can send a message request.</span>
+                                    </span>
+                                </label>
+
+                                <label class="flex items-start gap-4 rounded-xl border border-slate-200 dark:border-slate-700 p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        name="message_permission"
+                                        value="{{ \App\Enums\MessagePermission::NoOne->value }}"
+                                        @checked(old('message_permission', $user->message_permission->value) === \App\Enums\MessagePermission::NoOne->value)
+                                        class="mt-1 border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
+                                    />
+                                    <span>
+                                        <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">No one</span>
+                                        <span class="block text-sm text-slate-600 dark:text-slate-400 mt-1">Only people you follow or have chatted with before can message you.</span>
+                                    </span>
+                                </label>
+                            </div>
+
                             <button
                                 type="submit"
                                 class="btn-gradient text-white px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]"

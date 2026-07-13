@@ -6,6 +6,8 @@ use App\Models\CommentVote;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -69,7 +71,7 @@ test('users cannot comment on unpublished posts', function () {
     expect(Comment::query()->count())->toBe(0);
 });
 
-test('comment body is required', function () {
+test('comment requires body or image', function () {
     $user = User::factory()->create();
     $post = Post::factory()->published()->create();
 
@@ -80,6 +82,94 @@ test('comment body is required', function () {
         ->assertSessionHasErrors('body');
 
     expect(Comment::query()->count())->toBe(0);
+});
+
+test('authenticated users can comment on published posts with an image', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $image = UploadedFile::fake()->image('comment.jpg');
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), [
+            'body' => 'Check this out',
+            'image' => $image,
+        ])
+        ->assertRedirect(route('posts.show', $post).'#comments')
+        ->assertSessionHas('status');
+
+    $comment = Comment::query()->first();
+
+    expect($comment)->not->toBeNull();
+    expect($comment->image_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($comment->image_path);
+
+    $this->get(route('posts.show', $post))
+        ->assertSuccessful()
+        ->assertSee('data-image-lightbox', false)
+        ->assertSee(Storage::disk('public')->url($comment->image_path), false);
+});
+
+test('users can post image-only comments', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $image = UploadedFile::fake()->image('screenshot.png');
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.store', $post), [
+            'image' => $image,
+        ])
+        ->assertRedirect();
+
+    $comment = Comment::query()->first();
+
+    expect($comment)->not->toBeNull();
+    expect($comment->body)->toBe('');
+    expect($comment->image_path)->not->toBeNull();
+});
+
+test('users can reply to a comment with an image', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $parentComment = Comment::factory()->for($post)->create();
+    $image = UploadedFile::fake()->image('reply.jpg');
+
+    $this->actingAs($user)
+        ->post(route('posts.comments.reply', [$post, $parentComment]), [
+            'image' => $image,
+        ])
+        ->assertRedirect(route('posts.show', $post)."#comment-{$parentComment->id}")
+        ->assertSessionHas('status');
+
+    $reply = Comment::query()->where('parent_id', $parentComment->id)->first();
+
+    expect($reply)->not->toBeNull();
+    expect($reply->image_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($reply->image_path);
+});
+
+test('deleting a comment removes its stored image', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $post = Post::factory()->published()->create();
+    $imagePath = UploadedFile::fake()->image('comment.jpg')->store('comment-images', 'public');
+    $comment = Comment::factory()->for($post)->for($user)->create([
+        'image_path' => $imagePath,
+    ]);
+
+    Storage::disk('public')->assertExists($imagePath);
+
+    $this->actingAs($user)
+        ->delete(route('posts.comments.destroy', [$post, $comment]))
+        ->assertRedirect(route('posts.show', $post).'#comments');
+
+    Storage::disk('public')->assertMissing($imagePath);
 });
 
 test('comment authors can delete their own comments', function () {
@@ -202,7 +292,7 @@ test('authenticated users can reply to a comment', function () {
 
 test('reply authorization allows string post_id values from the database', function () {
     $user = User::factory()->create();
-    $post = Post::factory()->published()->create();
+    $post = Post::factory()->published()->create(['comments_enabled' => true]);
     $parentComment = Comment::factory()->for($post)->create();
     $parentComment->setAttribute('post_id', (string) $post->id);
 

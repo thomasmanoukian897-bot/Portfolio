@@ -37,7 +37,14 @@ class UserFollowController extends Controller
                 'following_id' => $user->id,
             ]);
 
-            $user->notify(new UserFollowedNotification($follower));
+            $alreadyNotified = $user->notifications()
+                ->where('type', UserFollowedNotification::class)
+                ->where('data->actor_id', $follower->id)
+                ->exists();
+
+            if (! $alreadyNotified) {
+                $user->notify(new UserFollowedNotification($follower));
+            }
         }
 
         $status = $existingFollow !== null

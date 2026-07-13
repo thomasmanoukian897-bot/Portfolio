@@ -108,7 +108,12 @@
                             <div class="flex items-center gap-3">
                                 <x-user-avatar :user="auth()->user()" />
                                 <div class="min-w-0">
-                                    <p class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{{ auth()->user()->name }}</p>
+                                    <a
+                                        href="{{ route('users.show', auth()->user()) }}"
+                                        class="block text-sm font-semibold text-slate-900 dark:text-slate-100 truncate hover:text-primary transition-colors"
+                                    >
+                                        {{ auth()->user()->name }}
+                                    </a>
                                     <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->email }}</p>
                                 </div>
                             </div>
@@ -375,6 +380,28 @@
             </div>
 
             <a
+                href="{{ route('messages.index') }}"
+                @class([
+                    'mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                    'text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80' => request()->routeIs('messages.*'),
+                    'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! request()->routeIs('messages.*'),
+                ])
+                @if ($hasUnreadMessages) aria-label="Messages, unread" @endif
+            >
+                <span class="relative inline-flex w-5 shrink-0 items-center justify-center text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-paper-plane w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+                    @if ($hasUnreadMessages)
+                        <span
+                            class="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"
+                            data-unread-message-dot
+                            aria-hidden="true"
+                        ></span>
+                    @endif
+                </span>
+                <span>Messages</span>
+            </a>
+
+            <a
                 href="{{ route('notifications.index') }}"
                 @class([
                     'mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
@@ -406,6 +433,18 @@
             >
                 <i class="fa-solid fa-user w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
                 <span>Profile</span>
+            </a>
+
+            <a
+                href="{{ route('profile.edit', ['tab' => 'settings']) }}"
+                @class([
+                    'mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                    'text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80' => request()->routeIs('profile.edit') && request()->query('tab') === 'settings',
+                    'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80' => ! request()->routeIs('profile.edit') || request()->query('tab') !== 'settings',
+                ])
+            >
+                <i class="fa-solid fa-gear w-5 text-center text-slate-500 dark:text-slate-400" aria-hidden="true"></i>
+                <span>Settings</span>
             </a>
         @endauth
     </nav>

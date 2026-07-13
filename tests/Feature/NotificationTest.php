@@ -1,10 +1,12 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Conversation;
 use App\Models\Post;
 use App\Models\User;
 use App\Models\UserFollow;
 use App\Models\UserPostSubscription;
+use App\Notifications\NewMessageNotification;
 use App\Notifications\PostCommentedNotification;
 use App\Notifications\PostLikedNotification;
 use App\Notifications\UserFollowedNotification;
@@ -49,6 +51,22 @@ test('following a user creates a follow notification', function () {
         ->assertRedirect(route('users.show', $followed));
 
     Notification::assertSentTo($followed, UserFollowedNotification::class);
+});
+
+test('following a user again after unfollowing does not create another follow notification', function () {
+    $follower = User::factory()->create();
+    $followed = User::factory()->create();
+
+    $this->actingAs($follower)
+        ->post(route('users.follow.toggle', $followed));
+
+    $this->actingAs($follower)
+        ->post(route('users.follow.toggle', $followed));
+
+    $this->actingAs($follower)
+        ->post(route('users.follow.toggle', $followed));
+
+    expect($followed->fresh()->notifications()->count())->toBe(1);
 });
 
 test('liking a post creates a notification for the post author', function () {
@@ -167,6 +185,25 @@ test('notifications page displays comment notifications with comment preview', f
         ->assertSee('casey-commenter')
         ->assertSee('commented on your post:')
         ->assertSee('This is a really insightful post.');
+});
+
+test('notifications page displays message notifications', function () {
+    $recipient = User::factory()->create();
+    $sender = User::factory()->create(['name' => 'Morgan Messenger']);
+    $conversation = Conversation::findOrCreateDirect($sender, $recipient);
+    $message = $conversation->messages()->create([
+        'user_id' => $sender->id,
+        'body' => 'Hey, are you free tomorrow?',
+    ]);
+
+    $recipient->notify(new NewMessageNotification($sender, $conversation, $message));
+
+    $this->actingAs($recipient)
+        ->get(route('notifications.index'))
+        ->assertSuccessful()
+        ->assertSee('morgan-messenger')
+        ->assertSee('has sent you a message')
+        ->assertDontSee('sent you a notification');
 });
 
 test('notifications page displays follow notifications grouped by period', function () {

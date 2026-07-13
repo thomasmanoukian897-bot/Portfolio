@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\GroupAddPermission;
+use App\Enums\MessagePermission;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -34,6 +37,8 @@ class User extends Authenticatable
         'avatar_path',
         'likes_public',
         'bookmarks_public',
+        'group_add_permission',
+        'message_permission',
     ];
 
     /**
@@ -51,6 +56,8 @@ class User extends Authenticatable
      */
     protected $attributes = [
         'role' => UserRole::User,
+        'group_add_permission' => GroupAddPermission::Everyone,
+        'message_permission' => MessagePermission::Everyone,
     ];
 
     /**
@@ -66,6 +73,8 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'likes_public' => 'boolean',
             'bookmarks_public' => 'boolean',
+            'group_add_permission' => GroupAddPermission::class,
+            'message_permission' => MessagePermission::class,
         ];
     }
 
@@ -148,6 +157,98 @@ class User extends Authenticatable
         return $this->followers()->where('users.id', $user->id)->exists();
     }
 
+    public function isFollowing(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->following()->where('users.id', $user->id)->exists();
+    }
+
+    public function canBeAddedToGroupBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        if ($this->group_add_permission === GroupAddPermission::Everyone) {
+            return true;
+        }
+
+        return $this->isFollowing($user);
+    }
+
+    public function hasMessagedBefore(?User $other): bool
+    {
+        if ($other === null) {
+            return false;
+        }
+
+        return DB::table('user_message_contacts')
+            ->where('user_id', $this->id)
+            ->where('contact_user_id', $other->id)
+            ->exists();
+    }
+
+    public function recordMessageContactWith(User $other): void
+    {
+        $now = now();
+
+        DB::table('user_message_contacts')->insertOrIgnore([
+            [
+                'user_id' => $this->id,
+                'contact_user_id' => $other->id,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'user_id' => $other->id,
+                'contact_user_id' => $this->id,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ]);
+    }
+
+    public function canBeMessagedBy(?User $sender): bool
+    {
+        if ($sender === null) {
+            return false;
+        }
+
+        if ($this->isBlockedWith($sender)) {
+            return false;
+        }
+
+        if ($this->isFollowing($sender) || $this->hasMessagedBefore($sender)) {
+            return true;
+        }
+
+        return match ($this->message_permission) {
+            MessagePermission::Everyone => true,
+            MessagePermission::FollowersOnly => $this->isFollowedBy($sender),
+            MessagePermission::NoOne => false,
+        };
+    }
+
+    public function receivesMessageAsRequest(?User $sender): bool
+    {
+        if ($sender === null) {
+            return false;
+        }
+
+        if (! $this->canBeMessagedBy($sender)) {
+            return false;
+        }
+
+        if ($this->isFollowing($sender) || $this->hasMessagedBefore($sender)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function postSubscribers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_post_subscriptions', 'subscribed_to_id', 'subscriber_id')
@@ -206,6 +307,27 @@ class User extends Authenticatable
         }
 
         return $this->hasBlocked($user) || $this->isBlockedBy($user);
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at', 'notifications_muted', 'accepted_at')
+            ->withTimestamps();
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function hasUnreadMessages(): bool
+    {
+        return Conversation::query()
+            ->forUser($this)
+            ->with(['latestMessage', 'users'])
+            ->get()
+            ->contains(fn (Conversation $conversation): bool => $conversation->hasUnreadMessagesFor($this));
     }
 
     public static function generateUniqueHandle(string $name): string

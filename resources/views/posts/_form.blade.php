@@ -100,6 +100,42 @@
     @enderror
 </div>
 
+<div class="space-y-3">
+    <span class="block text-xs font-bold text-slate-800 uppercase tracking-widest font-mono">
+        Engagement
+    </span>
+
+    <label class="flex items-start gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-xs cursor-pointer hover:border-blue-200 transition-colors">
+        <input type="hidden" name="comments_enabled" value="0" />
+        <input
+            type="checkbox"
+            name="comments_enabled"
+            value="1"
+            @checked(old('comments_enabled', true))
+            class="mt-1 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+        />
+        <span>
+            <span class="block text-sm font-semibold text-slate-900">Allow comments</span>
+            <span class="block text-sm text-slate-500 mt-1">Let others join the conversation on this post.</span>
+        </span>
+    </label>
+
+    <label class="flex items-start gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-xs cursor-pointer hover:border-blue-200 transition-colors">
+        <input type="hidden" name="likes_hidden" value="0" />
+        <input
+            type="checkbox"
+            name="likes_hidden"
+            value="1"
+            @checked(old('likes_hidden', false))
+            class="mt-1 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+        />
+        <span>
+            <span class="block text-sm font-semibold text-slate-900">Hide like count</span>
+            <span class="block text-sm text-slate-500 mt-1">People can still like your post, but the total will not be shown.</span>
+        </span>
+    </label>
+</div>
+
 <x-wysiwyg-editor
     name="content"
     :value="old('content')"

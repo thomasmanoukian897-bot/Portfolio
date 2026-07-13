@@ -42,4 +42,18 @@ class PostFactory extends Factory
             'published_at' => now(),
         ]);
     }
+
+    public function commentsDisabled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'comments_enabled' => false,
+        ]);
+    }
+
+    public function likesHidden(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'likes_hidden' => true,
+        ]);
+    }
 }

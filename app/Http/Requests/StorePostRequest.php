@@ -18,6 +18,13 @@ class StorePostRequest extends FormRequest
         if (! $this->has('category_ids')) {
             $this->merge(['category_ids' => []]);
         }
+
+        $this->merge([
+            'comments_enabled' => $this->has('comments_enabled')
+                ? $this->boolean('comments_enabled')
+                : true,
+            'likes_hidden' => $this->boolean('likes_hidden'),
+        ]);
     }
 
     /**
@@ -33,6 +40,8 @@ class StorePostRequest extends FormRequest
             'video' => ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:51200'],
             'category_ids' => ['required', 'array', 'min:1'],
             'category_ids.*' => ['integer', Rule::exists('categories', 'id')],
+            'comments_enabled' => ['boolean'],
+            'likes_hidden' => ['boolean'],
         ];
     }
 }

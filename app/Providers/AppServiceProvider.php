@@ -29,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
                 'hasUnreadNotifications',
                 $user?->unreadNotifications()->exists() ?? false,
             );
+
+            $view->with(
+                'hasUnreadMessages',
+                $user?->hasUnreadMessages() ?? false,
+            );
         });
     }
 }

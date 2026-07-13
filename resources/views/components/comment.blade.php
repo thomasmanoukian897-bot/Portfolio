@@ -48,7 +48,24 @@
             @endcan
         </div>
 
-        <p class="text-slate-700 whitespace-pre-wrap">{!! $comment->formattedBody() !!}</p>
+        @if (filled($comment->body))
+            <p class="text-slate-700 whitespace-pre-wrap">{!! $comment->formattedBody() !!}</p>
+        @endif
+
+        @if ($comment->imageUrl())
+            <button
+                type="button"
+                data-image-lightbox="{{ $comment->imageUrl() }}"
+                data-image-lightbox-alt="Image attached to comment by {{ $comment->user->name }}"
+                class="mt-2 block max-w-sm cursor-zoom-in overflow-hidden rounded-xl border border-slate-200 bg-slate-50 transition-opacity hover:opacity-90"
+            >
+                <img
+                    src="{{ $comment->imageUrl() }}"
+                    alt="Image attached to comment by {{ $comment->user->name }}"
+                    class="max-h-64 w-full object-contain"
+                />
+            </button>
+        @endif
 
         <div class="mt-2 flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2" data-comment-vote-group>

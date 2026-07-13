@@ -32,6 +32,8 @@ class Post extends Model
         'image_path',
         'video_path',
         'published_at',
+        'comments_enabled',
+        'likes_hidden',
     ];
 
     /**
@@ -41,6 +43,8 @@ class Post extends Model
     {
         return [
             'published_at' => 'datetime',
+            'comments_enabled' => 'boolean',
+            'likes_hidden' => 'boolean',
         ];
     }
 

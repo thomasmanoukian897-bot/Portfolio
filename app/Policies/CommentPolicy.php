@@ -10,7 +10,7 @@ class CommentPolicy
 {
     public function create(User $user, Post $post): bool
     {
-        return $post->isPublished();
+        return $post->isPublished() && $post->comments_enabled;
     }
 
     public function delete(User $user, Comment $comment): bool

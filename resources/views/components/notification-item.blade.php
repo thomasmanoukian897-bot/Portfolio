@@ -14,6 +14,7 @@
         'post_commented' => 'commented on your post:',
         'user_mentioned' => 'mentioned you in a comment:',
         'post_published' => 'published a new post',
+        'message' => 'has sent you a message',
         default => 'sent you a notification',
     };
     $postUrl = ! empty($data['post_slug'])

@@ -77,10 +77,12 @@
 
             <div class="flex items-center gap-4">
                 <div class="post-card-stats flex items-center gap-3 text-slate-500">
-                    <span class="inline-flex items-center gap-1.5 text-sm" aria-label="{{ $post->likes_count }} {{ Str::plural('like', $post->likes_count) }}">
-                        <i class="fa-solid fa-heart" aria-hidden="true"></i>
-                        <span class="font-semibold tabular-nums">{{ $post->likes_count }}</span>
-                    </span>
+                    @unless ($post->likes_hidden)
+                        <span class="inline-flex items-center gap-1.5 text-sm" aria-label="{{ $post->likes_count }} {{ Str::plural('like', $post->likes_count) }}">
+                            <i class="fa-solid fa-heart" aria-hidden="true"></i>
+                            <span class="font-semibold tabular-nums">{{ $post->likes_count }}</span>
+                        </span>
+                    @endunless
                     <span class="inline-flex items-center gap-1.5 text-sm" aria-label="{{ $post->comments_count }} {{ Str::plural('comment', $post->comments_count) }}">
                         <i class="fa-solid fa-comment" aria-hidden="true"></i>
                         <span class="font-semibold tabular-nums">{{ $post->comments_count }}</span>
